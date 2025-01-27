@@ -1,6 +1,8 @@
 import os
+import time
 
 from src.utils import load_json_file
+from src.models.digit_recognizer import DigitRecognizer
 
 
 class Workflow000(object):
@@ -48,3 +50,36 @@ class Workflow000(object):
         self.workflow_configuration = load_json_file(
             f"v{self.workflow_version}", workflow_configuration_directory_path
         )
+
+    def load_workflow_models(self) -> None:
+        """Loads each model & utility files in the workflow.
+
+        Loads each model & utility files in the workflow.
+
+        Args:
+            None.
+
+        Returns:
+            None.
+        """
+        start_time = time.time()
+
+        # Creates objects for models in workflow.
+        self.digit_recognizer = DigitRecognizer(
+            self.workflow_configuration["digit_recognizer"]["version"],
+            f"{self.models_base_url}/v1/models/digit_recognizer"
+            + f"v{self.workflow_configuration['digit_recognizer']['version']}:predict",
+        )
+
+        # Loads model configuration as dictionary for all the models.
+        self.digit_recognizer.load_model_configuration()
+
+        # Checks if the model's TensorFlow Serving URL is working as expected.
+        self.digit_recognizer.test_model_api()
+        print()
+        print(
+            "Finished loading serialized models for Workflow000 in {} sec.".format(
+                round(time.time() - start_time, 3)
+            )
+        )
+        print()
