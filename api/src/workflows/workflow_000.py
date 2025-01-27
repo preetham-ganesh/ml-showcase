@@ -1,8 +1,6 @@
 import os
 import time
-import datetime
 
-import PIL
 import numpy as np
 
 from src.utils import load_json_file
@@ -89,7 +87,7 @@ class Workflow000(object):
         print()
 
     def generate_prediction_parameters(
-        self, submission_id: str, image_file_path: str
+        self, submission_id: str, image: np.ndarray
     ) -> None:
         """Generates parameters required for workflow result.
 
@@ -97,7 +95,7 @@ class Workflow000(object):
 
         Args:
             submission_id: A string for the unique id of the submission.
-            image_file_path: A string for the location of the image.
+            image: A NumPy array for the image.
 
         Returns:
             None.
@@ -107,14 +105,14 @@ class Workflow000(object):
             submission_id, str
         ), "Variable submission_id should be of type 'str'."
         assert isinstance(
-            image_file_path, str
-        ), "Variable image_file_path should be of type 'str'."
+            image, np.ndarray
+        ), "Variable image should be of type 'np.ndarray'."
 
         # Adds submission id to the class's variable.
         self.submission_id = submission_id
 
-        # Loads image as a NumPy array.
-        self.image = np.asarray(PIL.Image.open(image_file_path))
+        # Adds image to the class's variable.
+        self.image = image
 
         # A dictionary for storing result extracted by the workflow.
         self.output = {
@@ -122,3 +120,42 @@ class Workflow000(object):
             "workflow_id": "workflow_000",
             "configuration_version": f"v{self.workflow_version}",
         }
+
+    def workflow_prediction(self, image: np.ndarray) -> None:
+        """Executes workflow to recgonize digit in an image.
+
+        Executes workflow to recgonize digit in an image.
+
+        Args:
+            None.
+
+        Returns:
+            None.
+        """
+        start_time = time.time()
+        print()
+
+        # Recognizes digit in the image.
+        task_start_time = time.time()
+        prediction = self.digit_recognizer.predict(self.image)
+        print(
+            f"Finished recognizing digit in image for submission id "
+            + f"{self.submission_id} in {(time.time() - task_start_time):.3f} sec."
+        )
+        print()
+
+        # Adds prediction to the output.
+        if prediction["status"] == "Success":
+            self.output["status"] = "Success"
+            self.output["prediction"] = {
+                "digit": prediction["digit"],
+                "score": prediction["score"],
+            }
+        else:
+            self.output["status"] = "Failure"
+            self.output["message"] = prediction["message"]
+        print(
+            f"Finished predicting output for submission id {self.submission_id} in "
+            + f"{(time.time() - start_time):.3f} sec."
+        )
+        print()
