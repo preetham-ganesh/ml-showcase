@@ -1,3 +1,9 @@
+import os
+
+
+from src.utils import load_json_file
+
+
 class DigitRecognizer(object):
     """Recognizes digit in an image."""
 
@@ -24,3 +30,22 @@ class DigitRecognizer(object):
         # Initializes class variables.
         self.model_version = model_version
         self.model_api_url = model_api_url
+
+    def load_model_configuration(self) -> None:
+        """Loads the model configuration file for model version.
+
+        Loads the model configuration file for model version.
+
+        Args:
+            None.
+
+        Returns:
+            None.
+        """
+        self.home_directory_path = os.getcwd()
+        model_configuration_directory_path = os.path.join(
+            self.home_directory_path, "configs", "models", "digit_recognizer"
+        )
+        self.model_configuration = load_json_file(
+            f"v{self.model_version}", model_configuration_directory_path
+        )
