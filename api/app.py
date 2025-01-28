@@ -3,6 +3,7 @@ import sys
 import uuid
 import io
 import sqlite3
+import time
 
 
 os.environ["TF_CPP_MIN_LOG_LEVEL"] = "3"
@@ -237,6 +238,75 @@ def submit_image() -> Dict[str, str]:
         ),
         200,
     )
+
+
+def prediction() -> None:
+    """Performs prediction for the uploaded input based on the workflow name.
+
+    Performs prediction for the uploaded input based on the workflow name.
+
+    Args:
+        None.
+
+    Returns:
+        None.
+    """
+    wait_time = 2
+    while True:
+        # Checks if an image has been uploaded to the API.
+        cursor.execute(
+            """
+            SELECT submission_id, workflow_name, submission_time_stamp, file_extension 
+            FROM submissions_info 
+            ORDER BY submission_time_stamp ASC 
+            LIMIT 1
+            """
+        )
+        row = cursor.fetchone()
+
+        # If no new image has been uploaded, then checks after wait time seconds.
+        if row is None:
+            print(f"No new data was uploaded. Will check again after {wait_time} secs.")
+            print()
+            time.sleep(wait_time)
+            continue
+
+        # Extracts submission id, workflow name & submission time stamp from row.
+        submission_id, workflow_name, submission_time_stamp, file_extension = row
+
+        # Checks if the following directory path exists.
+        uploaded_data_directory_path = check_directory_path_existence("data/in")
+
+        # Generates parameters required for workflow result.
+        workflows[workflow_name].generate_prediction_parameters(
+            submission_id,
+            f"{uploaded_data_directory_path}/{submission_id}.{file_extension}",
+        )
+
+        # Executes workflow to complete the prediction task.
+        workflows[workflow_name].workflow_prediction()
+
+        # Deletes submission id from submissions info table.
+        cursor.execute(
+            "DELETE FROM submissions_info WHERE submission_id=?",
+            (submission_id,),
+        )
+
+        # Updates image submissions completion info table, with the latest prediction.
+        cursor.execute(
+            """
+            INSERT INTO submissions_completion_info 
+            (submission_id, workflow_name, submission_time_stamp, completion_time_stamp) 
+            VALUES (?, ?, ?, ?)
+            """,
+            (
+                submission_id,
+                workflow_name,
+                submission_time_stamp,
+                generate_time_stamp(),
+            ),
+        )
+        connection.commit()
 
 
 @app.route("/api/v1/recognize_digit", methods=["POST"])
