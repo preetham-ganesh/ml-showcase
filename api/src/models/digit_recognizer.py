@@ -112,18 +112,19 @@ class DigitRecognizer(object):
         assert isinstance(image, np.ndarray), "Variable image of type 'np.ndarray'."
 
         # If image is in RGB format, converts it to grayscale.
-        if len(image.shape) == 2:
+        if len(image.shape) == 3:
             image = np.dot(image[..., :3], [0.2989, 0.5870, 0.1140])
 
         # Expands the dimensions of the image in the first axis.
         image = np.expand_dims(image, axis=0)
+        image = np.expand_dims(image, axis=-1)
 
         # Casts input image to float32 and normalizes the image from [0, 255] range to [0, 1] range.
         image = np.float32(image)
         image = image / 255.0
         return image
 
-    def predict_digit(self, image: np.ndarray) -> Dict[str, Any]:
+    def predict(self, image: np.ndarray) -> Dict[str, Any]:
         """Preprocesses image based on model requirements. Predicts digit recognized from image.
 
         Preprocesses image based on model requirements. Predicts digit recognized from image.
