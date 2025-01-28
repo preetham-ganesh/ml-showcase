@@ -1,12 +1,17 @@
 import uuid
 import os
 import argparse
+import time
 
-from flask import Flask, send_from_directory, request, render_template, redirect
+from flask import (
+    Flask,
+    send_from_directory,
+    request,
+    render_template,
+    redirect,
+    url_for,
+)
 import requests
-from dotenv import load_dotenv
-import numpy as np
-import skimage
 
 
 # Creates a flask application.
@@ -37,32 +42,94 @@ def send_image():
 
 
 @app.route("/error")
-def error(submission_id: str, message: str) -> str:
+def error() -> str:
     """Renders template for error message.
 
     Renders template for error message.
 
     Args:
-        submission_id: A string for the unique id of the submission.
-        message: A string for the error message.
+        None.
 
     Returns:
         A string for the rendered template for error.
     """
-    return render_template("error.html", submission_id=submission_id, message=message)
+    # Extracts the query parameters from the request
+    image_file_path = request.args.get("image_file_path")
+    message = request.args.get("message")
+    return render_template(
+        "error.html", input_file_path=image_file_path, message=message
+    )
+
+
+@app.route("/result")
+def result() -> str:
+    """Renders template for viewing result.
+
+    Renders template for viewing result.
+
+    Args:
+        None.
+
+    Returns:
+        A string for the rendered template for viewing result.
+    """
+    # Extracts the query parameters from the request
+    image_file_path = request.args.get("image_file_path")
+    predicted_digit = request.args.get("predicted_digit")
+    score = request.args.get("score")
+    return render_template(
+        "result.html",
+        input_file_path=image_file_path,
+        predicted_digit=predicted_digit,
+        score=round(float(score) * 100, 3),
+    )
 
 
 @app.route("/in_progress", methods=["GET", "POST"])
-def in_progress(image_file_path: str, submission_id: str) -> str:
+def in_progress() -> str:
     """"""
-    if request.method == "POST":
-        _ = ""
-    else:
-        return render_template(
-            "in_progress.html",
-            input_file_path=image_file_path,
-            submission_id=submission_id,
-        )
+    # Extracts the query parameters from the request
+    image_file_path = request.args.get("image_file_path")
+    submission_id = request.args.get("submission_id")
+
+    fetch_result_api_url = f"{host_url}/api/v1/fetch_result/{submission_id}"
+
+    # Sets polling interval (in seconds) and maximum iterations for polling.
+    polling_interval = 2
+    max_iterations = 30
+
+    # Iterates over the maximum iterations to fetch the result.
+    for _ in range(max_iterations):
+        result_response = requests.get(fetch_result_api_url)
+
+        #
+        if result_response.status_code == 200:
+            result = result_response.json()
+            print(result)
+
+            if result["status"] == "Success":
+                return redirect(
+                    url_for(
+                        "result",
+                        image_file_path=image_file_path,
+                        predicted_digit=result["prediction"]["digit"],
+                        score=result["prediction"]["score"],
+                    )
+                )
+
+            elif result["status"] == "Failure":
+                return error(image_file_path, result["message"])
+
+        elif result_response.status_code == 404:
+            return error(image_file_path, result_response.text)
+
+        # Wait before the next polling attempt
+        time.sleep(polling_interval)
+
+    # If processing is still not completed after timeout, stay on the in-progress page with a timeout message
+    return render_template(
+        "in_progress.html", submission_id=submission_id, input_file_path=image_file_path
+    )
 
 
 @app.route("/upload", methods=["GET", "POST"])
@@ -80,16 +147,46 @@ def upload() -> str:
     # Checks if request method is POST, then predicts digit for uploaded image.
     if request.method == "POST":
         # Extracts image file path from request.
-        image_file_path = request.form["selected_image"]
+        image_file_path = request.form["selected-image"]
         image_file_path = image_file_path.lstrip("../")
-
-        # Generates a unique id for this submission to ensure traceability.
-        submission_id = str(uuid.uuid4())
 
         # Defines the API URL for submitting the image to the ML model.
         submit_image_api_url = f"{host_url}/api/v1/submit_image"
 
-        #
+        # Opens the image file and submit it to the ML Showcase API for prediction.
+        try:
+            with open(image_file_path, "rb") as image_file:
+                submission_response = requests.post(
+                    submit_image_api_url,
+                    files={"image": image_file},
+                    data={"workflow_name": "workflow_000"},
+                )
+
+            # Based on the status code of response, redirects to appropriate page.
+            if submission_response.status_code == 200:
+                submission_id = submission_response.json().get("submission_id")
+                return redirect(
+                    url_for(
+                        "in_progress",
+                        image_file_path=image_file_path,
+                        submission_id=submission_id,
+                    )
+                )
+            else:
+                return redirect(
+                    url_for(
+                        "error",
+                        message=submission_response.text,
+                        input_file_path=image_file_path,
+                    )
+                )
+        except Exception as e:
+            return redirect(
+                url_for("error", message=str(e), input_file_path=image_file_path)
+            )
+    else:
+        # Renders the upload template if the request method is GET.
+        return render_template("upload.html")
 
 
 if __name__ == "__main__":
@@ -113,4 +210,4 @@ if __name__ == "__main__":
         host_url = "http://host.docker.internal:8100"
 
     # Runs app on specified host & port (For local deployment)
-    app.run(host="0.0.0.0", port=3000)
+    app.run(host="0.0.0.0", port=3000, debug=True)
