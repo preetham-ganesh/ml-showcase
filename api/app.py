@@ -16,7 +16,6 @@ sys.path.append(BASE_PATH)
 from flask import Flask, request, jsonify
 from flask_cors import CORS, cross_origin
 from PIL import Image
-import numpy as np
 
 from src.utils import (
     load_json_file,
@@ -366,7 +365,7 @@ def fetch_result(submission_id: str) -> Dict[str, Any]:
             )
 
         # Checks and retrieves the directory path for results.
-        results_directory_path = check_directory_path_existence("data/out/jsons")
+        results_directory_path = check_directory_path_existence("data/out")
 
         # Loads the result from the JSON file.
         result = load_json_file(submission_id, results_directory_path)
@@ -425,4 +424,4 @@ if __name__ == "__main__":
     processing_thread.start()
 
     # Runs the app on host '0.0.0.0' and port 8100.
-    app.run(host="0.0.0.0", port=8100)
+    app.run(host="0.0.0.0", port=8100, threaded=True)
