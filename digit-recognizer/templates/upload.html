@@ -54,14 +54,31 @@
           </div>
           <div class="main-container-form">
             <div id="image-options" class="row"></div>
-            <form action="/upload" method="post" enctype="multipart/form-data">
+            <form
+              action="/upload"
+              method="POST"
+              enctype="multipart/form-data"
+              id="upload-form"
+            >
               <div
                 id="image-options"
                 class="d-flex flex-wrap justify-content-center"
               ></div>
               <input type="hidden" id="selected-image" name="selected-image" />
+              <div id="loading-container" class="mt-3" style="display: none">
+                <div class="mb-3 text-info">
+                  <p class="font-weight-bold fs-5">Processing image..</p>
+                </div>
+                <div class="loader"></div>
+                <br />
+              </div>
               <div class="main-container-button mt-3">
-                <input type="submit" class="btn btn-primary" value="Analyze" />
+                <input
+                  id="analyze-button"
+                  type="submit"
+                  class="btn btn-primary"
+                  value="Analyze"
+                />
               </div>
             </form>
           </div>
@@ -78,11 +95,12 @@
       const maxNumbers = 10; // Number of base image names (0 to 9)
       const maxVariations = 3; // Number of variations (0, 1, 2)
 
+      const excludedImages = ["7_1", "8_0", "9_0"];
+
       for (let i = 0; i < maxNumbers; i++) {
         for (let j = 0; j < maxVariations; j++) {
-          const imageName = `${i}-${j}`;
-          if (imageName !== "7-1") {
-            // Exclude "7-1"
+          const imageName = `${i}_${j}`;
+          if (!excludedImages.includes(imageName)) {
             imagePaths.push(`../static/img/samples/${imageName}.png`);
           }
         }
@@ -130,6 +148,16 @@
         // Set the selected image path in the hidden input
         document.getElementById("selected-image").value = imagePath;
       }
+
+      // Show the loading animation and hide the button when the form is submitted
+      const form = document.getElementById("upload-form");
+      const loadingContainer = document.getElementById("loading-container");
+      const analyzeButton = document.getElementById("analyze-button");
+
+      form.addEventListener("submit", function (event) {
+        loadingContainer.style.display = "block";
+        analyzeButton.style.display = "none";
+      });
     </script>
   </body>
 </html>
