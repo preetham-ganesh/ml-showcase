@@ -37,5 +37,37 @@
         </div>
       </nav>
     </section>
+    <section id="in_progress">
+      <div class="container">
+        <div
+          class="main-container shadow"
+          style="background-image: url('../static/img/background.jpg')"
+        >
+          <div class="main-container-heading">
+            <h2 class="fs-1 text-white">Digit Recognizer</h2>
+          </div>
+          <div class="main-container-description">
+            <p class="text-white text-sm">
+              Select an image with hand written digit. The application will
+              recognize and display the number.
+            </p>
+          </div>
+          <div class="main-container-form">
+            <div class="mb-3">
+              <img
+                src="{{ url_for('send_image', file_path=input_file_path) }}"
+                width="128"
+                height="128"
+              />
+            </div>
+            <div class="mb-3 text-info">
+              <p class="font-weight-bold fs-5">Processing image..</p>
+            </div>
+            <div class="loader"></div>
+            <br />
+          </div>
+        </div>
+      </div>
+    </section>
   </body>
 </html>
