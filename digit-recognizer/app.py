@@ -85,13 +85,18 @@ def result() -> str:
     )
 
 
-@app.route("/in_progress", methods=["GET", "POST"])
-def in_progress() -> str:
-    """"""
-    # Extracts the query parameters from the request
-    image_file_path = request.args.get("image_file_path")
-    submission_id = request.args.get("submission_id")
+def process_result(image_file_path: str, submission_id: str) -> str:
+    """Processes the result of the prediction.
 
+    Processes the result of the prediction.
+
+    Args:
+        image_file_path: A string for the file path to the image.
+        submission_id: A string for the submission ID of the image.
+
+    Returns:
+        A string for the rendered template for the result or error.
+    """
     fetch_result_api_url = f"{host_url}/api/v1/fetch_result/{submission_id}"
 
     # Sets polling interval (in seconds) and maximum iterations for polling.
@@ -102,10 +107,9 @@ def in_progress() -> str:
     for _ in range(max_iterations):
         result_response = requests.get(fetch_result_api_url)
 
-        #
+        # Based on the status code of response, redirects to appropriate page.
         if result_response.status_code == 200:
             result = result_response.json()
-            print(result)
 
             if result["status"] == "Success":
                 return redirect(
@@ -118,17 +122,33 @@ def in_progress() -> str:
                 )
 
             elif result["status"] == "Failure":
-                return error(image_file_path, result["message"])
+                return redirect(
+                    url_for(
+                        "error",
+                        message=result["message"],
+                        image_file_path=image_file_path,
+                    )
+                )
 
         elif result_response.status_code == 404:
-            return error(image_file_path, result_response.text)
+            return redirect(
+                url_for(
+                    "error",
+                    message=result_response.text,
+                    image_file_path=image_file_path,
+                )
+            )
 
         # Wait before the next polling attempt
         time.sleep(polling_interval)
 
-    # If processing is still not completed after timeout, stay on the in-progress page with a timeout message
-    return render_template(
-        "in_progress.html", submission_id=submission_id, input_file_path=image_file_path
+    # If processing is still not completed after timeout, returns timeout as error message.
+    return redirect(
+        url_for(
+            "error",
+            message="Timeout. Server is busy. Please try again after some time.",
+            image_file_path=image_file_path,
+        )
     )
 
 
@@ -165,13 +185,7 @@ def upload() -> str:
             # Based on the status code of response, redirects to appropriate page.
             if submission_response.status_code == 200:
                 submission_id = submission_response.json().get("submission_id")
-                return redirect(
-                    url_for(
-                        "in_progress",
-                        image_file_path=image_file_path,
-                        submission_id=submission_id,
-                    )
-                )
+                return process_result(image_file_path, submission_id)
             else:
                 return redirect(
                     url_for(
