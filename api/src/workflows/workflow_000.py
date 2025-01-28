@@ -69,7 +69,7 @@ class Workflow000(object):
         # Creates objects for models in workflow.
         self.digit_recognizer = DigitRecognizer(
             self.workflow_configuration["digit_recognizer"]["version"],
-            f"{self.models_base_url}/v1/models/digit_recognizer"
+            f"{self.models_base_url}/v1/models/digit_recognizer_"
             + f"v{self.workflow_configuration['digit_recognizer']['version']}:predict",
         )
 
@@ -121,7 +121,7 @@ class Workflow000(object):
             "configuration_version": f"v{self.workflow_version}",
         }
 
-    def workflow_prediction(self, image: np.ndarray) -> None:
+    def workflow_prediction(self) -> None:
         """Executes workflow to recgonize digit in an image.
 
         Executes workflow to recgonize digit in an image.
