@@ -2,6 +2,7 @@ import os
 import sys
 import uuid
 import io
+import sqlite3
 
 
 os.environ["TF_CPP_MIN_LOG_LEVEL"] = "3"
@@ -64,6 +65,63 @@ def load_workflows(models_base_url: str) -> None:
 
         # Loads each model & utility files in the workflow.
         workflows[name].load_workflow_models()
+
+
+def initialize_databases():
+    """Initializes SQLite3 databases used to track the progress of submissions to the ML showcase API.
+
+    Initializes SQLite3 databases used to track the progress of submissions to the ML showcase API.
+
+    Args:
+        None.
+
+    Returns:
+        None.
+    """
+    global cursor, connection
+
+    # Establish a connection to the SQLite3 database and create a cursor.
+    connection = sqlite3.connect("ml_showcase_db.sqlite3", check_same_thread=False)
+    cursor = connection.cursor()
+
+    # Check if the 'submissions_info' table exists, if not, create it.
+    try:
+        cursor.execute("SELECT * FROM submissions_info LIMIT 1")
+    except sqlite3.OperationalError:
+        cursor.execute(
+            """
+            CREATE TABLE submissions_info (
+                submission_id TEXT PRIMARY KEY NOT NULL,
+                workflow_name TEXT NOT NULL,
+                submission_time_stamp TEXT NOT NULL,
+                file_extension TEXT NOT NULl
+            )
+            """
+        )
+        print("'submissions_info' does not exist. Creating a new one.")
+        print()
+
+    # Check if the 'submissions_completion_info' table exists, if not, create it.
+    try:
+        cursor.execute("SELECT * FROM submissions_completion_info LIMIT 1")
+    except sqlite3.OperationalError:
+        cursor.execute(
+            """
+            CREATE TABLE submissions_completion_info (
+                submission_id TEXT PRIMARY KEY NOT NULL,
+                workflow_name TEXT NOT NULL,
+                submission_time_stamp TEXT NOT NULL,
+                completion_time_stamp TEXT NOT NULL
+            )
+            """
+        )
+        print("'submissions_completion_info' does not exist. Creating a new one.")
+        print()
+
+    # Commit changes and reset the cursor.
+    connection.commit()
+    print("Databases initialized successfully.")
+    print()
 
 
 @app.route("/api/v1/recognize_digit", methods=["POST"])
