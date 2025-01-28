@@ -4,6 +4,7 @@ import uuid
 import io
 import sqlite3
 import time
+import threading
 
 
 os.environ["TF_CPP_MIN_LOG_LEVEL"] = "3"
@@ -23,7 +24,7 @@ from src.utils import (
 )
 from src.workflows.workflow_000 import Workflow000
 
-from typing import Dict
+from typing import Dict, Any
 
 
 # Creates flask app & enables CORS.
@@ -195,7 +196,7 @@ def submit_image() -> Dict[str, str]:
                     "message": "Incorrect 'workflow_name' included in the request.",
                 }
             ),
-            400,
+            404,
         )
 
     # Read the content in the file as bytes.
@@ -309,6 +310,93 @@ def prediction() -> None:
         connection.commit()
 
 
+@app.route("/api/v1/fetch_result/<submission_id>", methods=["GET"])
+@cross_origin()
+def fetch_result(submission_id: str) -> Dict[str, Any]:
+    """Checks the status of the prediction, and returns it if is ready.
+
+    Checks the status of the prediction, and returns it if is ready.
+
+    Args:
+        submission_id: A string for the unique id of the submission.
+
+    Returns:
+        A dictionary which contains the status, corresponding message, and if possible the extracted document.
+    """
+    # Validates input type.
+    if not isinstance(submission_id, str):
+        return (
+            jsonify({"status": "Failure", "message": "Invalid submission_id type."}),
+            400,
+        )
+
+    try:
+        # Checks if prediction for submission ID is already completed.
+        cursor.execute(
+            "SELECT completion_time_stamp FROM submissions_completion_info WHERE submission_id = ?",
+            (submission_id,),
+        )
+        row = cursor.fetchone()
+
+        # If no completion record exists, checks if the submission is still in progress.
+        if row is None:
+            cursor.execute(
+                "SELECT submission_time_stamp FROM submissions_info WHERE submission_id = ?",
+                (submission_id,),
+            )
+            row = cursor.fetchone()
+
+            # If submission ID doesn't exist in either table, returns an error message.
+            if row is None:
+                return (
+                    jsonify({"status": "Failure", "message": "Invalid submission_id."}),
+                    404,
+                )
+
+            # If submission exists but is still in progress, returns an in-progress status.
+            return (
+                jsonify(
+                    {
+                        "status": "In Progress",
+                        "message": "Workflow is still extracting information.",
+                    }
+                ),
+                202,
+            )
+
+        # Checks and retrieves the directory path for results.
+        results_directory_path = check_directory_path_existence("data/out/jsons")
+
+        # Loads the result from the JSON file.
+        result = load_json_file(submission_id, results_directory_path)
+
+        # Deletes the JSON file after loading the result.
+        os.remove(f"{results_directory_path}/{submission_id}.json")
+
+        # Checks if the PNG or TXT file exists, and deletes it.
+        if os.path.exists(f"{results_directory_path}/{submission_id}.png"):
+            os.remove(f"{results_directory_path}/{submission_id}.png")
+        elif os.path.exists(f"{results_directory_path}/{submission_id}.txt"):
+            os.remove(f"{results_directory_path}/{submission_id}.txt")
+
+        # Loads and returns the result as a JSON object.
+        return jsonify(result), 200
+
+    except sqlite3.Error as e:
+        # Handles SQLite database errors.
+        return (
+            jsonify({"status": "Failure", "message": f"Database error: {str(e)}"}),
+            500,
+        )
+
+    except Exception as e:
+        # Handles unexpected errors.
+        return (
+            jsonify({"status": "Failure", "message": f"Unexpected error: {str(e)}"}),
+            500,
+        )
+
+
 @app.route("/api/v1/recognize_digit", methods=["POST"])
 @cross_origin()
 def recognize_digit() -> Dict[str, str]:
@@ -356,8 +444,15 @@ def recognize_digit() -> Dict[str, str]:
 if __name__ == "__main__":
     print()
 
+    # Initializes SQLite3 databases used to track the progress of submissions to the ML showcase API.
+    initialize_databases()
+
     # Loads all the models & utility files for all workflows.
     load_workflows("http://host.docker.internal:8501")
+
+    # Implements multi-threading for extract information function.
+    processing_thread = threading.Thread(target=prediction)
+    processing_thread.start()
 
     # Runs the app on host '0.0.0.0' and port 8100.
     app.run(host="0.0.0.0", port=8100)
