@@ -5,6 +5,7 @@ import io
 import sqlite3
 import time
 import threading
+import argparse
 
 
 os.environ["TF_CPP_MIN_LOG_LEVEL"] = "3"
@@ -144,21 +145,21 @@ def submit_image() -> Dict[str, str]:
         A dictionary which contains the status of the image & its validity.
     """
     # Checks if the request contains an image.
-    if "file" not in request.files:
+    if "image" not in request.files:
         return (
             jsonify({"status": "Failure", "message": "Image was not submitted."}),
             400,
         )
 
     # Gets the uploaded file.
-    file = request.files["file"]
+    image = request.files["image"]
 
     # Checks if the file has a valid extension.
-    if file.filename.endswith(".png"):
+    if image.filename.endswith(".png"):
         file_type = "image/png"
-    elif file.filename.endswith(".jpg"):
+    elif image.filename.endswith(".jpg"):
         file_type = "image/jpg"
-    elif file.filename.endswith(".jpeg"):
+    elif image.filename.endswith(".jpeg"):
         file_type = "image/jpeg"
     else:
         return (
@@ -200,14 +201,14 @@ def submit_image() -> Dict[str, str]:
         )
 
     # Read the content in the file as bytes.
-    file_content = file.read()
+    image_content = image.read()
 
     # Generates a unique id for the submission.
     submission_id = str(uuid.uuid4())
 
     # Converts bytes into a NumPy array.
     try:
-        image = Image.open(io.BytesIO(file_content))
+        image = Image.open(io.BytesIO(image_content))
     except Exception as e:
         return jsonify({"status": "Failure", "message": str(e)})
 
@@ -374,10 +375,10 @@ def fetch_result(submission_id: str) -> Dict[str, Any]:
         os.remove(f"{results_directory_path}/{submission_id}.json")
 
         # Checks if the submission PNG or TXT file exists, and deletes it.
-        if os.path.exists(f"{results_directory_path}/{submission_id}.png"):
-            os.remove(f"{results_directory_path}/{submission_id}.png")
-        elif os.path.exists(f"{results_directory_path}/{submission_id}.txt"):
-            os.remove(f"{results_directory_path}/{submission_id}.txt")
+        if os.path.exists(os.path.join("data/in", f"{submission_id}.png")):
+            os.remove(os.path.join("data/in", f"{submission_id}.png"))
+        elif os.path.exists(os.path.join("data/in", f"{submission_id}.txt")):
+            os.remove(os.path.join("data/in", f"{submission_id}.txt"))
 
         # Loads and returns the result as a JSON object.
         return jsonify(result), 200
@@ -397,58 +398,27 @@ def fetch_result(submission_id: str) -> Dict[str, Any]:
         )
 
 
-@app.route("/api/v1/recognize_digit", methods=["POST"])
-@cross_origin()
-def recognize_digit() -> Dict[str, str]:
-    """Recognizes digit in an image given as input.
-
-    Recognizes digit in an image given as input.
-
-    Args:
-        None.
-
-    Returns:
-        None.
-    """
-    # Checks if the request contains an image.
-    if "image" not in request.files:
-        return (
-            jsonify({"status": "Failure", "message": "Image was not submitted."}),
-            400,
-        )
-
-    # Read the content in the file as bytes.
-    image_content = request.files["image"].read()
-
-    # Generates a unique id for the submission.
-    submission_id = str(uuid.uuid4())
-
-    # Converts bytes into a NumPy array.
-    try:
-        image = np.array(Image.open(io.BytesIO(image_content)))
-    except Exception as e:
-        return jsonify({"status": "Failure", "message": str(e)}), 400
-
-    # Generates parameters required for workflow result.
-    workflows["workflow_000"].generate_prediction_parameters(submission_id, image)
-
-    # Executes workflow to recgonize digit in an image.
-    workflows["workflow_000"].workflow_prediction()
-
-    if workflows["workflow_000"].output["status"] == "Success":
-        return jsonify(workflows["workflow_000"].output), 200
-    else:
-        return jsonify(workflows["workflow_000"].output), 400
-
-
 if __name__ == "__main__":
     print()
+    # Parses the arguments.
+    parser = argparse.ArgumentParser()
+    parser.add_argument(
+        "-dt",
+        "--deployment_type",
+        type=str,
+        required=True,
+        help="Type of the deployment.",
+    )
+    args = parser.parse_args()
 
     # Initializes SQLite3 databases used to track the progress of submissions to the ML showcase API.
     initialize_databases()
 
     # Loads all the models & utility files for all workflows.
-    load_workflows("http://host.docker.internal:8501")
+    if args.deployment_type == "local":
+        load_workflows("http://localhost:8501")
+    else:
+        load_workflows("http://host.docker.internal:8501")
 
     # Implements multi-threading for extract information function.
     processing_thread = threading.Thread(target=prediction)
