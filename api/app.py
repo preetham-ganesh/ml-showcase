@@ -373,7 +373,7 @@ def fetch_result(submission_id: str) -> Dict[str, Any]:
         # Deletes the JSON file after loading the result.
         os.remove(f"{results_directory_path}/{submission_id}.json")
 
-        # Checks if the PNG or TXT file exists, and deletes it.
+        # Checks if the submission PNG or TXT file exists, and deletes it.
         if os.path.exists(f"{results_directory_path}/{submission_id}.png"):
             os.remove(f"{results_directory_path}/{submission_id}.png")
         elif os.path.exists(f"{results_directory_path}/{submission_id}.txt"):
