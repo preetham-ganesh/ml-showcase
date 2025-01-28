@@ -1,23 +1,23 @@
-# Base Image
+# Uses Python 3.9 Slim Buster as Base image.
 FROM python:3.9-slim-buster
 
-# Set Working Directory
+# Sets working directory.
 WORKDIR /api
 
-# Copy Application Files
+# Copys application files to working directory.
 COPY . /api
 
-# Install System Dependencies
+# Installs system dependencies.
 RUN apt-get update && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
 
-# Upgrade Pip and Install Python Dependencies
+# Upgrades Pip and install python dependencies.
 RUN pip install --no-cache-dir --upgrade pip && \
     pip install --no-cache-dir -r requirements.txt
 
-# Expose Port
+# Exposes Port 8100.
 EXPOSE 8100
 
-# Start Application
-CMD ["python3", "app.py"]
+# Start application in production mode.
+CMD ["python3", "app.py", "-dt", "prod"]

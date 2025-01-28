@@ -1,9 +1,10 @@
 import os
 import time
 
+from PIL import Image
 import numpy as np
 
-from src.utils import load_json_file
+from src.utils import load_json_file, save_json_file
 from src.models.digit_recognizer import DigitRecognizer
 
 
@@ -87,7 +88,7 @@ class Workflow000(object):
         print()
 
     def generate_prediction_parameters(
-        self, submission_id: str, image: np.ndarray
+        self, submission_id: str, image_file_path: str
     ) -> None:
         """Generates parameters required for workflow result.
 
@@ -95,7 +96,7 @@ class Workflow000(object):
 
         Args:
             submission_id: A string for the unique id of the submission.
-            image: A NumPy array for the image.
+            image_file_path: A string for the location of the image.
 
         Returns:
             None.
@@ -105,14 +106,14 @@ class Workflow000(object):
             submission_id, str
         ), "Variable submission_id should be of type 'str'."
         assert isinstance(
-            image, np.ndarray
-        ), "Variable image should be of type 'np.ndarray'."
+            image_file_path, str
+        ), "Variable image_file_path should be of type 'str'."
 
         # Adds submission id to the class's variable.
         self.submission_id = submission_id
 
         # Adds image to the class's variable.
-        self.image = image
+        self.image = np.asarray(Image.open(image_file_path))
 
         # A dictionary for storing result extracted by the workflow.
         self.output = {
@@ -120,6 +121,25 @@ class Workflow000(object):
             "workflow_id": "workflow_000",
             "configuration_version": f"v{self.workflow_version}",
         }
+
+    def save_results(self) -> None:
+        """Saves extracted result as a JSON file.
+
+        Saves extracted result as a JSON file.
+
+        Args:
+            None.
+
+        Returns:
+            None.
+        """
+        # Saves the extracted document dictionary as a JSON file.
+        save_json_file(
+            self.output,
+            self.submission_id,
+            "data/out",
+        )
+        print()
 
     def workflow_prediction(self) -> None:
         """Executes workflow to recgonize digit in an image.
@@ -154,6 +174,9 @@ class Workflow000(object):
         else:
             self.output["status"] = "Failure"
             self.output["message"] = prediction["message"]
+
+        # Saves extracted result as a JSON file.
+        self.save_results()
         print(
             f"Finished predicting output for submission id {self.submission_id} in "
             + f"{(time.time() - start_time):.3f} sec."
