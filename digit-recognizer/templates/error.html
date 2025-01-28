@@ -56,14 +56,9 @@
             <div class="mb-3">
               <img
                 src="{{ url_for('send_image', file_path=input_file_path) }}"
-                width="256"
-                height="256"
+                width="128"
+                height="128"
               />
-            </div>
-            <div class="mb-3 text-white">
-              <p class="font-weight-bold fs-5">
-                <b>Submission ID: </b>{{submission_id}}
-              </p>
             </div>
             <div class="mb-3 text-warning">
               <p class="font-weight-bold fs-5"><b>Error: </b> {{message}}</p>
