@@ -15,7 +15,11 @@ from flask_cors import CORS, cross_origin
 from PIL import Image
 import numpy as np
 
-from src.utils import load_json_file
+from src.utils import (
+    load_json_file,
+    check_directory_path_existence,
+    generate_time_stamp,
+)
 from src.workflows.workflow_000 import Workflow000
 
 from typing import Dict
@@ -122,6 +126,117 @@ def initialize_databases():
     connection.commit()
     print("Databases initialized successfully.")
     print()
+
+
+@app.route("/api/v1/submit_image/", methods=["POST"])
+@cross_origin()
+def submit_image() -> Dict[str, str]:
+    """Submits the image to the API, validates the input, and stores the submission information in the database.
+
+    Submits the image to the API, validates the input, and stores the submission information in the database.
+
+    Args:
+        None.
+
+    Returns:
+        A dictionary which contains the status of the image & its validity.
+    """
+    # Checks if the request contains an image.
+    if "file" not in request.files:
+        return (
+            jsonify({"status": "Failure", "message": "Image was not submitted."}),
+            400,
+        )
+
+    # Gets the uploaded file.
+    file = request.files["file"]
+
+    # Checks if the file has a valid extension.
+    if file.filename.endswith(".png"):
+        file_type = "image/png"
+    elif file.filename.endswith(".jpg"):
+        file_type = "image/jpg"
+    elif file.filename.endswith(".jpeg"):
+        file_type = "image/jpeg"
+    else:
+        return (
+            jsonify(
+                {
+                    "status": "Failure",
+                    "message": "File should have '.png', '.jpg', or '.jpeg' as extension.",
+                }
+            ),
+            400,
+        )
+
+    # Checks if the request contains workflow id.
+    if "workflow_name" not in request.form:
+        return (
+            jsonify(
+                {
+                    "status": "Failure",
+                    "message": "Request should include 'workflow_name'.",
+                }
+            ),
+            400,
+        )
+    else:
+        workflow_name = request.form.get("workflow_name")
+
+    # Checks if the workflow name entered is correct.
+    try:
+        workflows[workflow_name]
+    except KeyError:
+        return (
+            jsonify(
+                {
+                    "status": "Failure",
+                    "message": "Incorrect 'workflow_name' included in the request.",
+                }
+            ),
+            400,
+        )
+
+    # Read the content in the file as bytes.
+    file_content = file.read()
+
+    # Generates a unique id for the submission.
+    submission_id = str(uuid.uuid4())
+
+    # Converts bytes into a NumPy array.
+    try:
+        image = Image.open(io.BytesIO(file_content))
+    except Exception as e:
+        return jsonify({"status": "Failure", "message": str(e)})
+
+    # Checks if the following directory path exists.
+    uploaded_data_directory_path = check_directory_path_existence("data/in")
+
+    # Saves the image as a PNG image.
+    image.save(os.path.join(uploaded_data_directory_path, f"{submission_id}.png"))
+
+    # Updates image submissions info table, with the uploaded image information.
+    cursor.execute(
+        """
+        INSERT INTO submissions_info (submission_id, workflow_name, submission_time_stamp, file_extension) 
+        VALUES (?, ?, ?, ?)
+        """,
+        (submission_id, workflow_name, generate_time_stamp(), "png"),
+    )
+    connection.commit()
+
+    # Returns the success message along with the unique id.
+    return (
+        jsonify(
+            {
+                "status": "Success",
+                "submission_id": submission_id,
+                "file_type": file_type,
+                "message": "File submitted.",
+            }
+        ),
+        200,
+    )
 
 
 @app.route("/api/v1/recognize_digit", methods=["POST"])
