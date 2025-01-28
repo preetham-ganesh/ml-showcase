@@ -4,7 +4,7 @@ import time
 from PIL import Image
 import numpy as np
 
-from src.utils import load_json_file
+from src.utils import load_json_file, save_json_file
 from src.models.digit_recognizer import DigitRecognizer
 
 
@@ -122,6 +122,25 @@ class Workflow000(object):
             "configuration_version": f"v{self.workflow_version}",
         }
 
+    def save_results(self) -> None:
+        """Saves extracted result as a JSON file.
+
+        Saves extracted result as a JSON file.
+
+        Args:
+            None.
+
+        Returns:
+            None.
+        """
+        # Saves the extracted document dictionary as a JSON file.
+        save_json_file(
+            self.output,
+            self.submission_id,
+            "data/out",
+        )
+        print()
+
     def workflow_prediction(self) -> None:
         """Executes workflow to recgonize digit in an image.
 
@@ -155,6 +174,9 @@ class Workflow000(object):
         else:
             self.output["status"] = "Failure"
             self.output["message"] = prediction["message"]
+
+        # Saves extracted result as a JSON file.
+        self.save_results()
         print(
             f"Finished predicting output for submission id {self.submission_id} in "
             + f"{(time.time() - start_time):.3f} sec."
