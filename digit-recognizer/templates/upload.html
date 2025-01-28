@@ -55,7 +55,11 @@
           <div class="main-container-form">
             <div id="image-options" class="row"></div>
             <form action="/upload" method="post" enctype="multipart/form-data">
-              <input type="hidden" name="selected_image" id="selected-image" />
+              <div
+                id="image-options"
+                class="d-flex flex-wrap justify-content-center"
+              ></div>
+              <input type="hidden" id="selected-image" name="selected-image" />
               <div class="main-container-button mt-3">
                 <input type="submit" class="btn btn-primary" value="Analyze" />
               </div>
@@ -69,5 +73,63 @@
         <p class="text-muted">Developed by Preetham Ganesh.</p>
       </div>
     </footer>
+    <script>
+      const imagePaths = [];
+      const maxNumbers = 10; // Number of base image names (0 to 9)
+      const maxVariations = 3; // Number of variations (0, 1, 2)
+
+      for (let i = 0; i < maxNumbers; i++) {
+        for (let j = 0; j < maxVariations; j++) {
+          const imageName = `${i}-${j}`;
+          if (imageName !== "7-1") {
+            // Exclude "7-1"
+            imagePaths.push(`../static/img/samples/${imageName}.png`);
+          }
+        }
+      }
+
+      // Function to get 5 random images
+      function getRandomImages(imageList, count) {
+        const shuffled = imageList.sort(() => 0.5 - Math.random());
+        return shuffled.slice(0, count);
+      }
+
+      // Render the random images
+      const imageOptionsContainer = document.getElementById("image-options");
+      const randomImages = getRandomImages(imagePaths, 5);
+
+      randomImages.forEach((imagePath, index) => {
+        const colDiv = document.createElement("div");
+        colDiv.classList.add("col-md-2", "text-center", "mb-3");
+
+        colDiv.innerHTML = `
+            <div class="image-container">
+              <img
+                src="${imagePath}"
+                alt="Sample Image ${index + 1}"
+                class="img-fluid"
+                style="cursor: pointer; border: 2px solid transparent;"
+                onclick="selectImage('${imagePath}', this)"
+              />
+            </div>
+          `;
+        imageOptionsContainer.appendChild(colDiv);
+      });
+
+      // Handle image selection
+      function selectImage(imagePath, imageElement) {
+        // Reset all images to remove border highlight
+        const allImages = document.querySelectorAll(".image-container img");
+        allImages.forEach((img) => {
+          img.style.border = "2px solid transparent";
+        });
+
+        // Highlight the selected image
+        imageElement.style.border = "2px solid #007bff";
+
+        // Set the selected image path in the hidden input
+        document.getElementById("selected-image").value = imagePath;
+      }
+    </script>
   </body>
 </html>
