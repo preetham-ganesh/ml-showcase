@@ -37,5 +37,32 @@
         </div>
       </nav>
     </section>
+    <section id="upload">
+      <div class="container">
+        <div
+          class="main-container shadow"
+          style="background-image: url('../static/img/background.jpg')"
+        >
+          <div class="main-container-heading">
+            <h2 class="fs-1 text-white">Digit Recognizer</h2>
+          </div>
+          <div class="main-container-description">
+            <p class="text-white text-sm">
+              Select an image with hand written digit. The application will
+              recognize and display the number.
+            </p>
+          </div>
+          <div class="main-container-form">
+            <div id="image-options" class="row"></div>
+            <form action="/upload" method="post" enctype="multipart/form-data">
+              <input type="hidden" name="selected_image" id="selected-image" />
+              <div class="main-container-button mt-3">
+                <input type="submit" class="btn btn-primary" value="Analyze" />
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+    </section>
   </body>
 </html>
