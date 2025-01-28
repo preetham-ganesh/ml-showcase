@@ -1,5 +1,7 @@
 import os
 import json
+import datetime
+import time
 
 from typing import Dict, Any
 
@@ -60,3 +62,20 @@ def load_json_file(file_name: str, directory_path: str) -> Dict[Any, Any]:
 
     except FileNotFoundError:
         raise FileNotFoundError(f"File path {file_path} does not exist.")
+
+
+def generate_time_stamp() -> str:
+    """Generates time stamp for current time in '%Y-%m-%d %H:%M:%S' format.
+
+    Generates time stamp for current time in '%Y-%m-%d %H:%M:%S' format.
+
+    Args:
+        None.
+
+    Returns:
+        None.
+    """
+    time_stamp = datetime.datetime.fromtimestamp(time.time()).strftime(
+        "%Y-%m-%d %H:%M:%S"
+    )
+    return time_stamp
