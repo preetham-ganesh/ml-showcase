@@ -56,3 +56,27 @@ def error() -> str:
     return render_template(
         "error.html", input_file_path=image_file_path, message=message
     )
+
+
+@app.route("/positive")
+def positive() -> str:
+    """Renders template for viewing positive result.
+
+    Renders template for viewing positive esult.
+
+    Args:
+        None.
+
+    Returns:
+        A string for the rendered template for viewing result.
+    """
+    # Extracts the query parameters from the request
+    input_file_path = request.args.get("input_file_path")
+    output_file_path = request.args.get("output_file_path")
+    score = request.args.get("score")
+    return render_template(
+        "positive.html",
+        input_file_path=input_file_path,
+        output_file_path=output_file_path,
+        score=round(float(score) * 100, 3),
+    )
