@@ -16,8 +16,8 @@ RUN apt-get update && \
 RUN pip install --no-cache-dir --upgrade pip && \
     pip install --no-cache-dir -r requirements.txt
 
-# Exposes Port 3000.
-EXPOSE 3001
+# Exposes Port 3002.
+EXPOSE 3002
 
 # Start application in production mode.
 CMD ["python3", "app.py", "-dt", "prod"]

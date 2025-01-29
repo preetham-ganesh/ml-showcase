@@ -240,4 +240,4 @@ if __name__ == "__main__":
         host_url = "http://host.docker.internal:8100"
 
     # Runs app on specified host & port (For local deployment)
-    app.run(host="0.0.0.0", port=3000)
+    app.run(host="0.0.0.0", port=3001)
