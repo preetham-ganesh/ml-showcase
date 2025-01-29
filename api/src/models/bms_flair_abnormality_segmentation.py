@@ -169,3 +169,34 @@ class FlairAbnormalitySegmentation(object):
         predicted_image = self.threshold_image(predicted_image)
         predicted_image = predicted_image.astype(np.uint8)
         return predicted_image
+
+    def predict(self, image: np.ndarray) -> np.ndarray:
+        """Predicts segmentation mask for FLAIR abnormality in brain MRI images.
+
+        Predicts segmentation mask for FLAIR abnormality in brain MRI images.
+
+        Args:
+            image: A NumPy array for the current image in the document.
+
+        Returns:
+            A NumPy array for the mask predicted by the model.
+        """
+        # Asserts type & value of the arguments.
+        assert isinstance(
+            image, np.ndarray
+        ), "Variable image should be of type 'np.ndarray'."
+
+        # Preprocesses input image based on segmentation model requirements.
+        model_input_image = self.preprocess_image(image)
+
+        # Predicts the class for each pixel in the current input batch.
+        response = requests.post(
+            self.model_api_url,
+            data=json.dumps({"inputs": model_input_image.tolist()}),
+            headers={"content-type": "application/json"},
+        )
+        prediction = np.array(json.loads(response.text)["outputs"])
+
+        # Converts the prediction from the segmentation model into an image.
+        predicted_image = self.postprocess_prediction(prediction)
+        return predicted_image
