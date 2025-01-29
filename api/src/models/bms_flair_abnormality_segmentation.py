@@ -94,3 +94,25 @@ class FlairAbnormalitySegmentation(object):
                 f"URL: {self.model_api_url} does not exist. Received 'requests.exceptions.ConnectionError' error."
             )
             exit()
+
+    def threshold_image(self, image: np.ndarray) -> np.ndarray:
+        """Thresholds image to have better distinction of regions in image.
+
+        Thresholds image to have better distinction of regions in image.
+
+        Args:
+            image: A NumPy array for the image.
+
+        Returns:
+            A NumPy array for the thresholded version of the image.
+        """
+        # Checks type & values of arguments.
+        assert isinstance(
+            image, np.ndarray
+        ), "Variable image should be of type 'numpy.ndarray'."
+
+        # Thresholds image to have better distinction of regions in image.
+        thresholded_image = np.where(
+            image > self.model_configuration["model"]["threshold"], 255, 0
+        )
+        return thresholded_image
