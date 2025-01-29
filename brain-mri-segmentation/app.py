@@ -68,7 +68,7 @@ def positive() -> str:
         None.
 
     Returns:
-        A string for the rendered template for viewing result.
+        A string for the rendered template for viewing positive result.
     """
     # Extracts the query parameters from the request
     input_file_path = request.args.get("input_file_path")
@@ -78,5 +78,27 @@ def positive() -> str:
         "positive.html",
         input_file_path=input_file_path,
         output_file_path=output_file_path,
+        score=round(float(score) * 100, 3),
+    )
+
+
+@app.route("/negative")
+def negative() -> str:
+    """Renders template for viewing negative result.
+
+    Renders template for viewing negative esult.
+
+    Args:
+        None.
+
+    Returns:
+        A string for the rendered template for viewing negative result.
+    """
+    # Extracts the query parameters from the request
+    input_file_path = request.args.get("input_file_path")
+    score = request.args.get("score")
+    return render_template(
+        "negative.html",
+        input_file_path=input_file_path,
         score=round(float(score) * 100, 3),
     )
