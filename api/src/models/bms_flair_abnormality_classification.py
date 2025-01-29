@@ -9,32 +9,29 @@ from src.utils import load_json_file
 from typing import Dict, Any
 
 
-class DigitRecognizer(object):
-    """Recognizes digit in an image."""
+class FlairAbnormalityClassification(object):
+    """Predicts whether is FLAIR abnormality in brain MRI images."""
 
     def __init__(self, model_version: str, model_api_url: str) -> None:
-        """Creates object attributes for DigitRecognizer class.
+        """Creates object attributes for the FlairAbnormalityClassification class.
 
-        Creates object attributes for DigitRecognizer class.
+        Creates object attributes for the FlairAbnormalityClassification class.
 
         Args:
-            model_version: A string for the version of the model.
+            model_version: A string for the version of the model should be used for prediction.
             model_api_url: A string for the URL of the model's API.
 
         Returns:
             None.
         """
-        # Asserts type of input arguments.
-        assert isinstance(
-            model_version, str
-        ), "Variable model_version should be of type 'str'."
-        assert isinstance(
-            model_api_url, str
-        ), "Variable model_api_url should be of type 'str'."
+        # Asserts type & value of the arguments.
+        assert isinstance(model_version, str), "Variable model_version of type 'str'."
+        assert isinstance(model_api_url, str), "Variable model_api_url of type 'str'."
 
-        # Initializes class variables.
+        # Initalizes class variables.
         self.model_version = model_version
         self.model_api_url = model_api_url
+        self.id_to_class = {0: "no_abnormality", 1: "abnormality"}
 
     def load_model_configuration(self) -> None:
         """Loads the model configuration file for model version.
@@ -49,7 +46,10 @@ class DigitRecognizer(object):
         """
         self.home_directory_path = os.getcwd()
         model_configuration_directory_path = os.path.join(
-            self.home_directory_path, "configs", "models", "digit_recognizer"
+            self.home_directory_path,
+            "configs",
+            "models",
+            "bms_flair_abnormality_classification",
         )
         self.model_configuration = load_json_file(
             f"v{self.model_version}", model_configuration_directory_path
@@ -85,7 +85,7 @@ class DigitRecognizer(object):
                 headers={"content-type": "application/json"},
             )
             print(
-                f"Digit Recognizer model v{self.model_version} status: {response.status_code}"
+                f"FLAIR Abnormality Classification model v{self.model_version} status: {response.status_code}"
             )
 
             # Checks if response code is 200.
@@ -104,7 +104,7 @@ class DigitRecognizer(object):
         Preprocesses the image for prediction.
 
         Args:
-            image: A NumPy array for the image.
+            image: A NumPy array for the image of brain MRI.
 
         Returns:
             A numpy array for the preprocessed image.
@@ -112,13 +112,8 @@ class DigitRecognizer(object):
         # Asserts type & value of the arguments.
         assert isinstance(image, np.ndarray), "Variable image of type 'np.ndarray'."
 
-        # If image is in RGB format, converts it to grayscale.
-        if len(image.shape) == 3:
-            image = np.dot(image[..., :3], [0.2989, 0.5870, 0.1140])
-
         # Expands the dimensions of the image in the first axis.
         image = np.expand_dims(image, axis=0)
-        image = np.expand_dims(image, axis=-1)
 
         # Casts input image to float32 and normalizes the image from [0, 255] range to [0, 1] range.
         image = np.float32(image)
@@ -126,48 +121,31 @@ class DigitRecognizer(object):
         return image
 
     def predict(self, image: np.ndarray) -> Dict[str, Any]:
-        """Preprocesses image based on model requirements. Predicts digit recognized from image.
+        """Predicts if the brain MRI image has FLAIR abnormality.
 
-        Preprocesses image based on model requirements. Predicts digit recognized from image.
+        Predicts if the brain MRI image has FLAIR abnormality.
 
         Args:
-            image: A NumPy array for the image.
+            image: A NumPy array for the image of brain MRI.
 
         Returns:
-            A dictionary for status of the prediction, along with predicted digit & prediction's confidence score.
+            A dictionary for type of image, and a floating point value for the confidence score of prediction.
         """
         # Asserts type & value of the arguments.
-        assert isinstance(
-            image, np.ndarray
-        ), "Variable image should be of type 'np.ndarray'."
+        assert isinstance(image, np.ndarray), "Variable image of type 'np.ndarray'."
 
-        # Preprocesses image based on model requirements.
+        # Preprocesses the image for prediction.
         model_input_image = self.preprocess_image(image)
 
-        # Sends model input image as input to Model using URL.
-        try:
-            response = requests.post(
-                self.model_api_url,
-                data=json.dumps({"inputs": model_input_image.tolist()}),
-                headers={"content-type": "application/json"},
-            )
-        except requests.exceptions.ConnectionError:
-            return {
-                "status": "Failure",
-                "message": "Serving URL does not exist. Received 'requests.exceptions.ConnectionError' error.",
-            }
+        # Predicts the class for each image in the current input batch.
+        response = requests.post(
+            self.model_api_url,
+            data=json.dumps({"inputs": model_input_image.tolist()}),
+            headers={"content-type": "application/json"},
+        )
+        prediction = json.loads(response.text)["outputs"]
 
-        # If status is 200, then extracts the prediction from the response.
-        if response.status_code == 200:
-            prediction = np.array(
-                json.loads(response.text)["outputs"], dtype=np.float32
-            )
-
-            # Computes the digit predicted by the model, & extracts the confidence score.
-            predicted_digit = int(np.argmax(prediction[0]))
-            score = float(prediction[0][predicted_digit])
-            return {"status": "Success", "digit": predicted_digit, "score": score}
-
-        # Else returns the text from response.
-        else:
-            return {"status": "Failure", "message": response.text}
+        # Computes id of the class predicted by the model, & extracts the confidence score.
+        predicted_id = int(np.argmax(prediction[0]))
+        score = float(prediction[0][predicted_id])
+        return {"label": self.id_to_class[predicted_id], "score": score}

@@ -5,16 +5,19 @@ from PIL import Image
 import numpy as np
 
 from src.utils import load_json_file, save_json_file
-from src.models.digit_recognizer import DigitRecognizer
+from src.models.bms_flair_abnormality_classification import (
+    FlairAbnormalityClassification,
+)
+from src.models.bms_flair_abnormality_segmentation import FlairAbnormalitySegmentation
 
 
-class Workflow000(object):
-    """Recognizes digit in an image."""
+class Workflow001(object):
+    """Predicts if a brain MRI image has FLAIR abnormality and predicts the segmentation mask."""
 
     def __init__(self, workflow_version: str, models_base_url: str) -> None:
-        """Creates object attributes for the Workflow000 class.
+        """Creates object attributes for the Workflow001 class.
 
-        Creates object attributes for the Workflow000 class.
+        Creates object attributes for the Workflow001 class.
 
         Args:
             workflow_version: A string for the version of the workflow.
@@ -48,7 +51,7 @@ class Workflow000(object):
         """
         self.home_directory_path = os.getcwd()
         workflow_configuration_directory_path = os.path.join(
-            self.home_directory_path, "configs", "workflows", "workflow_000"
+            self.home_directory_path, "configs", "workflows", "workflow_001"
         )
         self.workflow_configuration = load_json_file(
             f"v{self.workflow_version}", workflow_configuration_directory_path
@@ -67,21 +70,32 @@ class Workflow000(object):
         """
         start_time = time.time()
 
-        # Creates objects for models in workflow.
-        self.digit_recognizer = DigitRecognizer(
-            self.workflow_configuration["digit_recognizer"]["version"],
-            f"{self.models_base_url}/v1/models/digit_recognizer_"
-            + f"v{self.workflow_configuration['digit_recognizer']['version']}:predict",
+        # Creates objects for Predict class in corresponding models.
+        self.flair_abnormality_classification = FlairAbnormalityClassification(
+            self.workflow_configuration["bms_flair_abnormality_classification"][
+                "version"
+            ],
+            f"{self.models_base_url}/v1/models/bms_flair_abnormality_classification_"
+            + f"v{self.workflow_configuration['bms_flair_abnormality_classification']['version']}:predict",
+        )
+        self.flair_abnormality_segmentation = FlairAbnormalitySegmentation(
+            self.workflow_configuration["bms_flair_abnormality_segmentation"][
+                "version"
+            ],
+            f"{self.models_base_url}/v1/models/bms_flair_abnormality_segmentation_"
+            + f"v{self.workflow_configuration['bms_flair_abnormality_segmentation']['version']}:predict",
         )
 
         # Loads model configuration as dictionary for all the models.
-        self.digit_recognizer.load_model_configuration()
+        self.flair_abnormality_classification.load_model_configuration()
+        self.flair_abnormality_segmentation.load_model_configuration()
 
         # Checks if the model's TensorFlow Serving URL is working as expected.
-        self.digit_recognizer.test_model_api()
+        self.flair_abnormality_classification.test_model_api()
+        self.flair_abnormality_segmentation.test_model_api()
         print()
         print(
-            "Finished loading serialized models for Workflow000 in {} sec.".format(
+            "Finished loading serialized models for Workflow001 in {} sec.".format(
                 round(time.time() - start_time, 3)
             )
         )
@@ -118,8 +132,9 @@ class Workflow000(object):
         # A dictionary for storing result extracted by the workflow.
         self.output = {
             "submission_id": submission_id,
-            "workflow_id": "workflow_000",
+            "workflow_id": "workflow_001",
             "configuration_version": f"v{self.workflow_version}",
+            "result": dict(),
         }
 
     def save_results(self) -> None:
@@ -142,9 +157,10 @@ class Workflow000(object):
         print()
 
     def workflow_prediction(self) -> None:
-        """Executes workflow to recognize digit in an image.
+        """Executes workflow to predict FLAIR abnormality in a brain MRI image and generate a segmentation mask.
 
-        Executes workflow to recognize digit in an image.
+        Executes workflow to predict FLAIR abnormality in a brain MRI image and generate a segmentation mask if
+        abnormality is detected.
 
         Args:
             None.
@@ -155,25 +171,30 @@ class Workflow000(object):
         start_time = time.time()
         print()
 
-        # Recognizes digit in the image.
+        # Predicts if the brain MRI image has FLAIR abnormality.
         task_start_time = time.time()
-        prediction = self.digit_recognizer.predict(self.image)
+        result = self.flair_abnormality_classification.predict(self.image)
+        self.output["result"] = result
         print(
-            f"Finished recognizing digit in image for submission id "
+            f"Finished predicting if FLAIR abnormality is present in brain MRI image for submission id "
             + f"{self.submission_id} in {(time.time() - task_start_time):.3f} sec."
         )
         print()
 
-        # Adds prediction to the output.
-        if prediction["status"] == "Success":
-            self.output["status"] = "Success"
-            self.output["prediction"] = {
-                "digit": prediction["digit"],
-                "score": prediction["score"],
-            }
-        else:
-            self.output["status"] = "Failure"
-            self.output["message"] = prediction["message"]
+        # If abnormality is detected, then predicts segmentation mask for FLAIR abnormality in brain MRI images.
+        if result["label"] == "abnormality":
+            task_start_time = time.time()
+            predicted_image = self.flair_abnormality_segmentation.predict(self.image)
+
+            # Converts the array to a list.
+            predicted_image_list = predicted_image.tolist()
+            self.output["result"]["predicted_image"] = predicted_image_list
+            print(
+                f"Finished predicting segmentation mask for FLAIR abnormality for submission id {self.submission_id}"
+                + f" in {(time.time() - task_start_time):.3f} sec."
+            )
+            print()
+        self.output["time_taken"] = f"{(time.time() - start_time):.3f} sec."
 
         # Saves extracted result as a JSON file.
         self.save_results()
