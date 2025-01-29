@@ -23,6 +23,7 @@ from src.utils import (
     generate_time_stamp,
 )
 from src.workflows.workflow_000 import Workflow000
+from src.workflows.workflow_001 import Workflow001
 
 from typing import Dict, Any
 
@@ -65,6 +66,10 @@ def load_workflows(models_base_url: str) -> None:
         # Creates on object for the Workflow 000.
         if name == "workflow_000":
             workflows[name] = Workflow000(workflow_versions[name], models_base_url)
+
+        # Creates on object for the Workflow 001.
+        elif name == "workflow_001":
+            workflows[name] = Workflow001(workflow_versions[name], models_base_url)
 
         # Loads the workflow configuration file for current version.
         workflows[name].load_workflow_configuration()
