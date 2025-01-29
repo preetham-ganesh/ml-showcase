@@ -134,7 +134,6 @@ class Workflow001(object):
             "submission_id": submission_id,
             "workflow_id": "workflow_001",
             "configuration_version": f"v{self.workflow_version}",
-            "result": dict(),
         }
 
     def save_results(self) -> None:
