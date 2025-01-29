@@ -1,6 +1,9 @@
 import os
 import time
 
+from PIL import Image
+import numpy as np
+
 from src.utils import load_json_file
 from src.models.bms_flair_abnormality_classification import (
     FlairAbnormalityClassification,
@@ -97,3 +100,39 @@ class Workflow001(object):
             )
         )
         print()
+
+    def generate_prediction_parameters(
+        self, submission_id: str, image_file_path: str
+    ) -> None:
+        """Generates parameters required for workflow result.
+
+        Generates parameters required for workflow result.
+
+        Args:
+            submission_id: A string for the unique id of the submission.
+            image_file_path: A string for the location of the image.
+
+        Returns:
+            None.
+        """
+        # Checks types & values of arguments.
+        assert isinstance(
+            submission_id, str
+        ), "Variable submission_id should be of type 'str'."
+        assert isinstance(
+            image_file_path, str
+        ), "Variable image_file_path should be of type 'str'."
+
+        # Adds submission id to the class's variable.
+        self.submission_id = submission_id
+
+        # Adds image to the class's variable.
+        self.image = np.asarray(Image.open(image_file_path))
+
+        # A dictionary for storing result extracted by the workflow.
+        self.output = {
+            "submission_id": submission_id,
+            "workflow_id": "workflow_001",
+            "configuration_version": f"v{self.workflow_version}",
+            "result": dict(),
+        }
