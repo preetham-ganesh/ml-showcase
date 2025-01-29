@@ -422,7 +422,7 @@ if __name__ == "__main__":
     if args.deployment_type == "local":
         load_workflows("http://localhost:8501")
     else:
-        load_workflows("http://host.docker.internal:8501")
+        load_workflows("http://172.17.0.1:8501")
 
     # Implements multi-threading for extract information function.
     processing_thread = threading.Thread(target=prediction)
