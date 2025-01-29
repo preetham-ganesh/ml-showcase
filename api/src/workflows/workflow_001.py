@@ -4,7 +4,7 @@ import time
 from PIL import Image
 import numpy as np
 
-from src.utils import load_json_file
+from src.utils import load_json_file, save_json_file
 from src.models.bms_flair_abnormality_classification import (
     FlairAbnormalityClassification,
 )
@@ -136,3 +136,22 @@ class Workflow001(object):
             "configuration_version": f"v{self.workflow_version}",
             "result": dict(),
         }
+
+    def save_results(self) -> None:
+        """Saves extracted result as a JSON file.
+
+        Saves extracted result as a JSON file.
+
+        Args:
+            None.
+
+        Returns:
+            None.
+        """
+        # Saves the extracted document dictionary as a JSON file.
+        save_json_file(
+            self.output,
+            self.submission_id,
+            "data/out",
+        )
+        print()
