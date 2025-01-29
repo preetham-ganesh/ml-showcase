@@ -37,5 +37,54 @@
         </div>
       </nav>
     </section>
+    <section id="positive">
+      <div class="container">
+        <div
+          class="main-container shadow"
+          style="background-image: url('../static/img/background.jpg')"
+        >
+          <div class="main-container-heading">
+            <h2 class="fs-1 text-white">Brain MRI Segmentation</h2>
+          </div>
+          <div class="main-container-description">
+            <p class="text-white text-sm">
+              Select a brain MRI image to analyze. The application will segment
+              and highlight FLAIR abnormalities for detailed visualization.
+            </p>
+          </div>
+          <div class="main-container-form">
+            <div class="mb-3 text-white">
+              <p class="font-weight-bold fs-5">
+                <b>FLAIR Abnormality detected</b>
+              </p>
+              <p class="font-weight-bold fs-5">
+                <b>Confidence Score: </b>{{score}}%
+              </p>
+            </div>
+          </div>
+          <div class="image-container d-flex align-items-center">
+            <div class="text-center mx-2 text-white">
+              <p class="font-weight-bold fs-5"><b>Input Image</b></p>
+              <img
+                src="{{url_for('send_image', file_path=input_file_path)}}"
+                width="256"
+                height="256"
+              />
+            </div>
+            <div class="text-center mx-2 text-white">
+              <p class="font-weight-bold fs-5"><b>Prediction</b></p>
+              <img
+                src="{{url_for('send_image', file_path=output_file_path)}}"
+                width="256"
+                height="256"
+              />
+            </div>
+          </div>
+          <div class="mb-3 main-container-button mt-3">
+            <a href="/upload" class="btn btn-primary">Reset</a>
+          </div>
+        </div>
+      </div>
+    </section>
   </body>
 </html>
