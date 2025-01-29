@@ -1,6 +1,6 @@
-import uuid
 import os
 import time
+import argparse
 
 from flask import (
     Flask,
@@ -13,7 +13,6 @@ from flask import (
 import requests
 from PIL import Image
 import numpy as np
-import skimage
 
 
 # Creates a flask application.
@@ -273,3 +272,27 @@ def index():
         A response for the redirected upload page.
     """
     return redirect("/upload")
+
+
+if __name__ == "__main__":
+    print()
+
+    # Parses the arguments.
+    parser = argparse.ArgumentParser()
+    parser.add_argument(
+        "-dt",
+        "--deployment_type",
+        type=str,
+        required=True,
+        help="Type of the deployment.",
+    )
+    args = parser.parse_args()
+
+    # Based on the type of deployment, the host URL is set.
+    if args.deployment_type == "local":
+        host_url = "http://localhost:8100"
+    else:
+        host_url = "http://host.docker.internal:8100"
+
+    # Runs app on specified host & port (For local deployment)
+    app.run(host="0.0.0.0", port=3000, debug=True)
