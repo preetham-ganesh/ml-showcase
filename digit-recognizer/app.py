@@ -1,4 +1,3 @@
-import uuid
 import os
 import argparse
 import time
@@ -21,6 +20,8 @@ app = Flask(__name__)
 @app.route("/send_image")
 def send_image():
     """Sends a saved image from the directory based on the provided file path.
+
+    Sends a saved image from the directory based on the provided file path.
 
     Args:
         file_path: The relative path to the image file to send.
