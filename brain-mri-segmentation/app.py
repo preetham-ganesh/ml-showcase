@@ -207,3 +207,54 @@ def process_result(image_file_path: str, submission_id: str) -> str:
             image_file_path=image_file_path,
         )
     )
+
+
+@app.route("/upload", methods=["GET", "POST"])
+def upload() -> str:
+    """Renders template for uploading image to Brain MRI Segmentation. Predicts FLAIR abnormality in uploaded MRI image.
+
+    Renders template for uploading image to Brain MRI Segmentation. Predicts FLAIR abnormality in uploaded MRI image.
+
+    Args:
+        None.
+
+    Returns:
+        A string for the rendered template for upload or complete.
+    """
+    # Checks if request method is POST, then predicts digit for uploaded image.
+    if request.method == "POST":
+        # Extracts image file path from request.
+        image_file_path = request.form["selected-image"]
+        image_file_path = image_file_path.lstrip("../")
+
+        # Defines the API URL for submitting the image to the ML model.
+        submit_image_api_url = f"{host_url}/api/v1/submit_image"
+
+        # Opens the image file and submit it to the ML Showcase API for prediction.
+        try:
+            with open(image_file_path, "rb") as image_file:
+                submission_response = requests.post(
+                    submit_image_api_url,
+                    files={"image": image_file},
+                    data={"workflow_name": "workflow_000"},
+                )
+
+            # Based on the status code of response, redirects to appropriate page.
+            if submission_response.status_code == 200:
+                submission_id = submission_response.json().get("submission_id")
+                return process_result(image_file_path, submission_id)
+            else:
+                return redirect(
+                    url_for(
+                        "error",
+                        message=submission_response.text,
+                        input_file_path=image_file_path,
+                    )
+                )
+        except Exception as e:
+            return redirect(
+                url_for("error", message=str(e), input_file_path=image_file_path)
+            )
+    else:
+        # Renders the upload template if the request method is GET.
+        return render_template("upload.html")
