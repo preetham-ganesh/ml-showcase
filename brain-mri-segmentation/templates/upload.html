@@ -85,5 +85,78 @@
         <p class="text-muted">Developed by Preetham Ganesh.</p>
       </div>
     </footer>
+    <script>
+      const imagePaths = [
+        "../static/img/samples/1.png",
+        "../static/img/samples/6.png",
+        "../static/img/samples/17.png",
+        "../static/img/samples/18.png",
+        "../static/img/samples/21.png",
+        "../static/img/samples/53.png",
+        "../static/img/samples/54.png",
+        "../static/img/samples/70.png",
+        "../static/img/samples/71.png",
+        "../static/img/samples/110.png",
+        "../static/img/samples/133.png",
+        "../static/img/samples/152.png",
+        "../static/img/samples/231.png",
+        "../static/img/samples/235.png",
+        "../static/img/samples/247.png",
+        "../static/img/samples/444.png",
+      ];
+
+      // Function to get 5 random images
+      function getRandomImages(imageList, count) {
+        const shuffled = imageList.sort(() => 0.5 - Math.random());
+        return shuffled.slice(0, count);
+      }
+
+      // Render the random images
+      const imageOptionsContainer = document.getElementById("image-options");
+      const randomImages = getRandomImages(imagePaths, 5);
+
+      randomImages.forEach((imagePath, index) => {
+        const colDiv = document.createElement("div");
+        colDiv.classList.add("col-md-2", "text-center", "mb-3");
+
+        colDiv.innerHTML = `
+              <div class="image-container">
+                <img
+                  src="${imagePath}"
+                  alt="Sample Image ${index + 1}"
+                  class="img-fluid"
+                  style="cursor: pointer; border: 2px solid transparent;"
+                  onclick="selectImage('${imagePath}', this)"
+                />
+              </div>
+            `;
+        imageOptionsContainer.appendChild(colDiv);
+      });
+
+      // Handle image selection
+      function selectImage(imagePath, imageElement) {
+        // Reset all images to remove border highlight
+        const allImages = document.querySelectorAll(".image-container img");
+        allImages.forEach((img) => {
+          img.style.border = "2px solid transparent";
+        });
+
+        // Highlight the selected image
+        imageElement.style.border = "2px solid #007bff";
+
+        // Set the selected image path in the hidden input
+        document.getElementById("selected-image").value = imagePath;
+      }
+
+      // Show the loading animation and hide the button when the form is submitted
+      const form = document.getElementById("upload-form");
+      const loadingContainer = document.getElementById("loading-container");
+      const analyzeButton = document.getElementById("analyze-button");
+
+      form.addEventListener("submit", function (event) {
+        loadingContainer.style.display = "block";
+        analyzeButton.style.display = "none";
+      });
+    </script>
   </body>
 </html>
