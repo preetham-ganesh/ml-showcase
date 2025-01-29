@@ -116,3 +116,28 @@ class FlairAbnormalitySegmentation(object):
             image > self.model_configuration["model"]["threshold"], 255, 0
         )
         return thresholded_image
+
+    def preprocess_image(self, image: np.ndarray) -> np.ndarray:
+        """Preprocesses image based on segmentation model requirements.
+
+        Preprocesses image based on segmentation model requirements.
+
+        Args:
+            image: A NumPy array for the image of brain MRI.
+
+        Returns:
+            A NumPy array for the processed image as input to the model.
+        """
+        # Asserts type & value of the arguments.
+        assert isinstance(image, np.ndarray), "Variable image of type 'np.ndarray'."
+
+        # Thresholds image to have better distinction of regions in image.
+        image = self.threshold_image(image)
+
+        # Adds an extra dimension to the image.
+        image = np.expand_dims(image, axis=0)
+
+        # Casts input image to float32 and normalizes the image from [0, 255] range to [0, 1] range.
+        image = np.float32(image)
+        image = image / 255.0
+        return image
