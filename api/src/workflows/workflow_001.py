@@ -155,3 +155,51 @@ class Workflow001(object):
             "data/out",
         )
         print()
+
+    def workflow_prediction(self) -> None:
+        """Executes workflow to predict FLAIR abnormality in a brain MRI image and generate a segmentation mask.
+
+        Executes workflow to predict FLAIR abnormality in a brain MRI image and generate a segmentation mask if
+        abnormality is detected.
+
+        Args:
+            None.
+
+        Returns:
+            None.
+        """
+        start_time = time.time()
+        print()
+
+        # Predicts if the brain MRI image has FLAIR abnormality.
+        task_start_time = time.time()
+        result = self.flair_abnormality_classification.predict(self.image)
+        self.output["result"] = result
+        print(
+            f"Finished predicting if FLAIR abnormality is present in brain MRI image for submission id "
+            + f"{self.submission_id} in {(time.time() - task_start_time):.3f} sec."
+        )
+        print()
+
+        # If abnormality is detected, then predicts segmentation mask for FLAIR abnormality in brain MRI images.
+        if result["label"] == "abnormality":
+            task_start_time = time.time()
+            predicted_image = self.flair_abnormality_segmentation.predict(self.image)
+
+            # Converts the array to a list.
+            predicted_image_list = predicted_image.tolist()
+            self.output["result"]["predicted_image"] = predicted_image_list
+            print(
+                f"Finished predicting segmentation mask for FLAIR abnormality for submission id {self.submission_id}"
+                + f" in {(time.time() - task_start_time):.3f} sec."
+            )
+            print()
+        self.output["time_taken"] = f"{(time.time() - start_time):.3f} sec."
+
+        # Saves extracted result as a JSON file.
+        self.save_results()
+        print(
+            f"Finished predicting output for submission id {self.submission_id} in "
+            + f"{(time.time() - start_time):.3f} sec."
+        )
+        print()

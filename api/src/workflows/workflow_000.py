@@ -142,9 +142,9 @@ class Workflow000(object):
         print()
 
     def workflow_prediction(self) -> None:
-        """Executes workflow to recgonize digit in an image.
+        """Executes workflow to recognize digit in an image.
 
-        Executes workflow to recgonize digit in an image.
+        Executes workflow to recognize digit in an image.
 
         Args:
             None.
