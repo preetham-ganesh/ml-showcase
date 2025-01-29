@@ -37,5 +37,42 @@
         </div>
       </nav>
     </section>
+    <section id="error">
+      <div class="container">
+        <div
+          class="main-container shadow"
+          style="background-image: url('../static/img/background.jpg')"
+        >
+          <div class="main-container-heading">
+            <h2 class="fs-1 text-white">Digit Recognizer</h2>
+          </div>
+          <div class="main-container-description">
+            <p class="text-white text-sm">
+              Select a brain MRI image to analyze. The application will segment
+              and highlight FLAIR abnormalities for detailed visualization.
+            </p>
+          </div>
+          <div class="main-container-form">
+            <div class="mb-3">
+              <img
+                src="{{ url_for('send_image', file_path=input_file_path) }}"
+                width="128"
+                height="128"
+                style="border-radius: 8px"
+              />
+            </div>
+            <div class="mb-3 text-warning">
+              <p class="font-weight-bold fs-5"><b>Error: </b> {{message}}</p>
+            </div>
+            <div class="mb-3 text-warning">
+              <p class="fs-5">Please try again after some time.</p>
+            </div>
+            <div class="mb-3 main-container-button">
+              <a href="/upload" class="btn btn-primary">Reset</a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
   </body>
 </html>
