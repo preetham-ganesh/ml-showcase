@@ -258,3 +258,18 @@ def upload() -> str:
     else:
         # Renders the upload template if the request method is GET.
         return render_template("upload.html")
+
+
+@app.route("/")
+def index():
+    """Redirects to upload page.
+
+    Redirects to upload page.
+
+    Args:
+        None.
+
+    Returns:
+        A response for the redirected upload page.
+    """
+    return redirect("/upload")
