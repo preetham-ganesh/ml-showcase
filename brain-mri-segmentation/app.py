@@ -36,3 +36,23 @@ def send_image():
         return send_from_directory(directory, file_name)
     except Exception as e:
         return f"Error: {str(e)}", 400
+
+
+@app.route("/error")
+def error() -> str:
+    """Renders template for error message.
+
+    Renders template for error message.
+
+    Args:
+        None.
+
+    Returns:
+        A string for the rendered template for error.
+    """
+    # Extracts the query parameters from the request
+    image_file_path = request.args.get("image_file_path")
+    message = request.args.get("message")
+    return render_template(
+        "error.html", input_file_path=image_file_path, message=message
+    )
