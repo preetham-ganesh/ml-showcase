@@ -1,6 +1,11 @@
 import os
+import time
 
 from src.utils import load_json_file
+from src.models.bms_flair_abnormality_classification import (
+    FlairAbnormalityClassification,
+)
+from src.models.bms_flair_abnormality_segmentation import FlairAbnormalitySegmentation
 
 
 class Workflow001(object):
@@ -48,3 +53,47 @@ class Workflow001(object):
         self.workflow_configuration = load_json_file(
             f"v{self.workflow_version}", workflow_configuration_directory_path
         )
+
+    def load_workflow_models(self) -> None:
+        """Loads each model & utility files in the workflow.
+
+        Loads each model & utility files in the workflow.
+
+        Args:
+            None.
+
+        Returns:
+            None.
+        """
+        start_time = time.time()
+
+        # Creates objects for Predict class in corresponding models.
+        self.flair_abnormality_classification = FlairAbnormalityClassification(
+            self.workflow_configuration["bms_flair_abnormality_classification"][
+                "version"
+            ],
+            f"{self.models_base_url}/v1/models/bms_flair_abnormality_classification_"
+            + f"v{self.workflow_configuration['bms_flair_abnormality_classification']['version']}:predict",
+        )
+        self.flair_abnormality_segmentation = FlairAbnormalitySegmentation(
+            self.workflow_configuration["bms_flair_abnormality_segmentation"][
+                "version"
+            ],
+            f"{self.models_base_url}/v1/models/bms_flair_abnormality_segmentation_"
+            + f"v{self.workflow_configuration['bms_flair_abnormality_segmentation']['version']}:predict",
+        )
+
+        # Loads model configuration as dictionary for all the models.
+        self.flair_abnormality_classification.load_model_configuration()
+        self.flair_abnormality_segmentation.load_model_configuration()
+
+        # Checks if the model's TensorFlow Serving URL is working as expected.
+        self.flair_abnormality_classification.test_model_api()
+        self.flair_abnormality_segmentation.test_model_api()
+        print()
+        print(
+            "Finished loading serialized models for Workflow001 in {} sec.".format(
+                round(time.time() - start_time, 3)
+            )
+        )
+        print()
