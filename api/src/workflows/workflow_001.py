@@ -1,3 +1,8 @@
+import os
+
+from src.utils import load_json_file
+
+
 class Workflow001(object):
     """Predicts if a brain MRI image has FLAIR abnormality and predicts the segmentation mask."""
 
@@ -24,3 +29,22 @@ class Workflow001(object):
         # Initializes class variables.
         self.workflow_version = workflow_version
         self.models_base_url = models_base_url
+
+    def load_workflow_configuration(self) -> None:
+        """Loads the workflow configuration file for current version.
+
+        Loads the workflow configuration file for current version.
+
+        Args:
+            None.
+
+        Returns:
+            None.
+        """
+        self.home_directory_path = os.getcwd()
+        workflow_configuration_directory_path = os.path.join(
+            self.home_directory_path, "configs", "workflows", "workflow_001"
+        )
+        self.workflow_configuration = load_json_file(
+            f"v{self.workflow_version}", workflow_configuration_directory_path
+        )
