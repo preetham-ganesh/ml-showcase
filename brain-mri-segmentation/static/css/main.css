@@ -1,0 +1,184 @@
+body {
+  overflow-x: hidden;
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+.navbar {
+  border-bottom: 1px solid #d3d3d3;
+}
+
+.navbar-brand {
+  margin-top: 10px;
+}
+
+.main-container {
+  margin-top: 150px;
+  margin-left: 20px;
+  margin-right: 20px;
+  background-color: rgba(0, 0, 0, 0.7); /* Adds a dimming effect */
+  background-blend-mode: darken; /* Blends the dimming color with the image */
+  padding: 20px;
+  border-radius: 20px;
+  margin-bottom: 50px;
+  background-size: cover;
+}
+
+.main-container-heading {
+  margin: 10px;
+  margin-top: 200px;
+  margin-left: 30px;
+  padding: 2px;
+}
+
+.main-container-description {
+  margin: 10px;
+  margin-left: 30px;
+  padding: 2px;
+}
+
+.main-container-form {
+  margin: 10px;
+  padding: 2px;
+  margin-left: 30px;
+  margin-right: 30px;
+}
+
+.main-container-input-file {
+  width: 100%;
+}
+
+.main-container-button {
+  margin-top: 10px;
+  margin-bottom: 20px;
+}
+
+.shadow {
+  -moz-box-shadow: 0 0 40px 15px #000b13;
+  -webkit-box-shadow: 0 0 40px 15px #000b13;
+  box-shadow: 0 0 40px 15px #000b13;
+}
+
+.footer {
+  border-top: 1px solid #d3d3d3;
+}
+
+@media (max-width: 480px) {
+  .main-container {
+    margin-top: 120px;
+    margin-bottom: 60px;
+  }
+
+  .main-container-heading {
+    margin-top: 50px;
+    margin-left: 5px;
+  }
+
+  .main-container-description {
+    margin-left: 5px;
+  }
+
+  .main-container-form {
+    margin-left: 5px;
+    margin-right: 5px;
+  }
+
+  .main-container-button {
+    margin-top: 10px;
+  }
+}
+
+.image-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 20px; /* Adds spacing between the images */
+}
+
+.text-center {
+  text-align: center;
+}
+
+.mx-2 {
+  margin-left: 8px;
+  margin-right: 8px;
+}
+
+.selected-image {
+  border: 10px solid white;
+}
+
+#image-options {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-evenly; /* Ensure equal space between images */
+  gap: 1rem; /* Control the spacing between images */
+}
+
+.image-container {
+  flex: 0 0 18%; /* Adjust width as needed (percentage-based for responsiveness) */
+  max-width: 150px; /* Optional: Set a max width for consistent sizing */
+}
+
+.image-container img:hover {
+  transform: scale(1.05);
+  transition: transform 0.2s ease-in-out;
+}
+
+.image-container img {
+  width: 100%; /* Make images responsive */
+  height: auto; /* Maintain aspect ratio */
+  cursor: pointer;
+  border: 2px solid transparent; /* For selection styling */
+  border-radius: 8px; /* Optional: Add rounded corners */
+}
+
+.loader {
+  width: 65px;
+  aspect-ratio: 1;
+  position: relative;
+}
+
+.loader:before,
+.loader:after {
+  content: "";
+  position: absolute;
+  border-radius: 50px;
+  box-shadow: 0 0 0 3px inset #fff;
+  animation: l4 2.5s infinite;
+}
+
+.loader:after {
+  animation-delay: -1.25s;
+}
+
+@keyframes l4 {
+  0% {
+    inset: 0 35px 35px 0;
+  }
+  12.5% {
+    inset: 0 35px 0 0;
+  }
+  25% {
+    inset: 35px 35px 0 0;
+  }
+  37.5% {
+    inset: 35px 0 0 0;
+  }
+  50% {
+    inset: 35px 0 0 35px;
+  }
+  62.5% {
+    inset: 0 0 0 35px;
+  }
+  75% {
+    inset: 0 0 35px 35px;
+  }
+  87.5% {
+    inset: 0 0 35px 0;
+  }
+  100% {
+    inset: 0 35px 35px 0;
+  }
+}
