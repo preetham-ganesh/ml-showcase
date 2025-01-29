@@ -6,6 +6,8 @@ import numpy as np
 
 from src.utils import load_json_file
 
+from typing import Dict, Any
+
 
 class FlairAbnormalityClassification(object):
     """Predicts whether is FLAIR abnormality in brain MRI images."""
@@ -117,3 +119,33 @@ class FlairAbnormalityClassification(object):
         image = np.float32(image)
         image = image / 255.0
         return image
+
+    def predict(self, image: np.ndarray) -> Dict[Any]:
+        """Predicts if the brain MRI image has FLAIR abnormality.
+
+        Predicts if the brain MRI image has FLAIR abnormality.
+
+        Args:
+            image: A NumPy array for the image of brain MRI.
+
+        Returns:
+            A dictionary for type of image, and a floating point value for the confidence score of prediction.
+        """
+        # Asserts type & value of the arguments.
+        assert isinstance(image, np.ndarray), "Variable image of type 'np.ndarray'."
+
+        # Preprocesses the image for prediction.
+        model_input_image = self.preprocess_image(image)
+
+        # Predicts the class for each image in the current input batch.
+        response = requests.post(
+            self.model_api_url,
+            data=json.dumps({"inputs": model_input_image.tolist()}),
+            headers={"content-type": "application/json"},
+        )
+        prediction = json.loads(response.text)["outputs"]
+
+        # Computes id of the class predicted by the model, & extracts the confidence score.
+        predicted_id = int(np.argmax(prediction[0]))
+        score = float(prediction[0][predicted_id])
+        return {"label": self.id_to_class[predicted_id], "score": score}
