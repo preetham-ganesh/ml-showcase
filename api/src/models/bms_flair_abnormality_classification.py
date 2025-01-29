@@ -1,4 +1,8 @@
 import os
+import json
+
+import requests
+import numpy as np
 
 from src.utils import load_json_file
 
@@ -48,3 +52,46 @@ class FlairAbnormalityClassification(object):
         self.model_configuration = load_json_file(
             f"v{self.model_version}", model_configuration_directory_path
         )
+
+    def test_model_api(self) -> None:
+        """Checks if the model's TensorFlow Serving URL is working as expected.
+
+        Checks if the model's TensorFlow Serving URL is working as expected.
+
+        Args:
+            None.
+
+        Returns:
+            None.
+        """
+        # Checks if the model's TensorFlow Serving URL is working as expected.
+        try:
+            response = requests.post(
+                self.model_api_url,
+                data=json.dumps(
+                    {
+                        "inputs": np.zeros(
+                            (
+                                2,
+                                self.model_configuration["model"]["final_image_height"],
+                                self.model_configuration["model"]["final_image_width"],
+                                self.model_configuration["model"]["n_channels"],
+                            )
+                        ).tolist()
+                    }
+                ),
+                headers={"content-type": "application/json"},
+            )
+            print(
+                f"FLAIR Abnormality Classification model v{self.model_version} status: {response.status_code}"
+            )
+
+            # Checks if response code is 200.
+            if response.status_code != 200:
+                print(response.text)
+                exit()
+        except requests.exceptions.ConnectionError:
+            print(
+                f"URL: {self.model_api_url} does not exist. Received 'requests.exceptions.ConnectionError' error."
+            )
+            exit()

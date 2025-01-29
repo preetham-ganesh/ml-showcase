@@ -96,6 +96,7 @@ class DigitRecognizer(object):
             print(
                 f"URL: {self.model_api_url} does not exist. Received 'requests.exceptions.ConnectionError' error."
             )
+            exit()
 
     def preprocess_image(self, image: np.ndarray) -> np.ndarray:
         """Preprocesses the image for prediction.
