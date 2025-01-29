@@ -134,7 +134,6 @@ class Workflow001(object):
             "submission_id": submission_id,
             "workflow_id": "workflow_001",
             "configuration_version": f"v{self.workflow_version}",
-            "result": dict(),
         }
 
     def save_results(self) -> None:
@@ -174,7 +173,7 @@ class Workflow001(object):
         # Predicts if the brain MRI image has FLAIR abnormality.
         task_start_time = time.time()
         result = self.flair_abnormality_classification.predict(self.image)
-        self.output["result"] = result
+        self.output["prediction"] = result
         print(
             f"Finished predicting if FLAIR abnormality is present in brain MRI image for submission id "
             + f"{self.submission_id} in {(time.time() - task_start_time):.3f} sec."
@@ -188,7 +187,7 @@ class Workflow001(object):
 
             # Converts the array to a list.
             predicted_image_list = predicted_image.tolist()
-            self.output["result"]["predicted_image"] = predicted_image_list
+            self.output["prediction"]["image"] = predicted_image_list
             print(
                 f"Finished predicting segmentation mask for FLAIR abnormality for submission id {self.submission_id}"
                 + f" in {(time.time() - task_start_time):.3f} sec."

@@ -1,6 +1,6 @@
 import os
-import argparse
 import time
+import argparse
 
 from flask import (
     Flask,
@@ -11,13 +11,15 @@ from flask import (
     url_for,
 )
 import requests
+from PIL import Image
+import numpy as np
 
 
 # Creates a flask application.
 app = Flask(__name__)
 
 
-@app.route("/send_image")
+@app.route("/send_image/")
 def send_image():
     """Sends a saved image from the directory based on the provided file path.
 
@@ -62,26 +64,48 @@ def error() -> str:
     )
 
 
-@app.route("/result")
-def result() -> str:
-    """Renders template for viewing result.
+@app.route("/positive")
+def positive() -> str:
+    """Renders template for viewing positive result.
 
-    Renders template for viewing result.
+    Renders template for viewing positive esult.
 
     Args:
         None.
 
     Returns:
-        A string for the rendered template for viewing result.
+        A string for the rendered template for viewing positive result.
     """
     # Extracts the query parameters from the request
-    image_file_path = request.args.get("image_file_path")
-    predicted_digit = request.args.get("predicted_digit")
+    input_file_path = request.args.get("input_file_path")
+    output_file_path = request.args.get("output_file_path")
     score = request.args.get("score")
     return render_template(
-        "result.html",
-        input_file_path=image_file_path,
-        predicted_digit=predicted_digit,
+        "positive.html",
+        input_file_path=input_file_path,
+        output_file_path=output_file_path,
+        score=round(float(score) * 100, 3),
+    )
+
+
+@app.route("/negative")
+def negative() -> str:
+    """Renders template for viewing negative result.
+
+    Renders template for viewing negative esult.
+
+    Args:
+        None.
+
+    Returns:
+        A string for the rendered template for viewing negative result.
+    """
+    # Extracts the query parameters from the request
+    input_file_path = request.args.get("input_file_path")
+    score = request.args.get("score")
+    return render_template(
+        "negative.html",
+        input_file_path=input_file_path,
         score=round(float(score) * 100, 3),
     )
 
@@ -112,25 +136,44 @@ def process_result(image_file_path: str, submission_id: str) -> str:
         if result_response.status_code == 200:
             result = result_response.json()
 
-            if result["status"] == "Success":
+            # If the prediction is an abnormality, saves the predicted image.
+            if result["prediction"]["label"] == "abnormality":
+                # Converts the predicted image data to a NumPy array.
+                predicted_image = np.array(result["prediction"]["image"])
+                print(predicted_image.shape)
+
+                # Ensures the predicted image is in the correct format for saving.
+                if predicted_image.max() <= 1:
+                    predicted_image = (predicted_image * 255).astype("uint8")
+                predicted_image = predicted_image.astype("uint8")
+
+                # Converts NumPy array to a PIL image, saves it to a file.
+                predicted_image = Image.fromarray(predicted_image)
+                predicted_image.save(
+                    os.path.join("data", "out", f"{submission_id}.png")
+                )
                 return redirect(
                     url_for(
-                        "result",
-                        image_file_path=image_file_path,
-                        predicted_digit=result["prediction"]["digit"],
+                        "positive",
+                        input_file_path=image_file_path,
+                        output_file_path=os.path.join(
+                            "data", "out", f"{submission_id}.png"
+                        ),
                         score=result["prediction"]["score"],
                     )
                 )
 
-            elif result["status"] == "Failure":
+            # If the prediction is not an abnormality, redirects to negative result page.
+            else:
                 return redirect(
                     url_for(
-                        "error",
-                        message=result["message"],
-                        image_file_path=image_file_path,
+                        "negative",
+                        input_file_path=image_file_path,
+                        score=result["prediction"]["score"],
                     )
                 )
 
+        # If the result is not found, redirects to error page.
         elif result_response.status_code == 404:
             return redirect(
                 url_for(
@@ -155,9 +198,9 @@ def process_result(image_file_path: str, submission_id: str) -> str:
 
 @app.route("/upload", methods=["GET", "POST"])
 def upload() -> str:
-    """Renders template for uploading image to Digit Recognizer. Recognizes digit in image.
+    """Renders template for uploading image to Brain MRI Segmentation. Predicts FLAIR abnormality in uploaded MRI image.
 
-    Renders template for uploading image to Digit Recognizer. Recognizes digit in image.
+    Renders template for uploading image to Brain MRI Segmentation. Predicts FLAIR abnormality in uploaded MRI image.
 
     Args:
         None.
@@ -180,7 +223,7 @@ def upload() -> str:
                 submission_response = requests.post(
                     submit_image_api_url,
                     files={"image": image_file},
-                    data={"workflow_name": "workflow_000"},
+                    data={"workflow_name": "workflow_001"},
                 )
 
             # Based on the status code of response, redirects to appropriate page.
@@ -240,4 +283,4 @@ if __name__ == "__main__":
         host_url = "http://host.docker.internal:8100"
 
     # Runs app on specified host & port (For local deployment)
-    app.run(host="0.0.0.0", port=3000)
+    app.run(host="0.0.0.0", port=3001)
