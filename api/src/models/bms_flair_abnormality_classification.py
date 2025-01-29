@@ -120,7 +120,7 @@ class FlairAbnormalityClassification(object):
         image = image / 255.0
         return image
 
-    def predict(self, image: np.ndarray) -> Dict[Any]:
+    def predict(self, image: np.ndarray) -> Dict[str, Any]:
         """Predicts if the brain MRI image has FLAIR abnormality.
 
         Predicts if the brain MRI image has FLAIR abnormality.
