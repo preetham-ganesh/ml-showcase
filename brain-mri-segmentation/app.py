@@ -136,52 +136,40 @@ def process_result(image_file_path: str, submission_id: str) -> str:
         if result_response.status_code == 200:
             result = result_response.json()
 
-            # Based on the status of the result, redirects to appropriate page.
-            if result["status"] == "Success":
+            # If the prediction is an abnormality, saves the predicted image.
+            if result["prediction"]["label"] == "abnormality":
+                # Converts the predicted image data to a NumPy array.
+                predicted_image = np.array(result["prediction"]["image"])
+                print(predicted_image.shape)
 
-                # If the prediction is an abnormality, saves the predicted image.
-                if result["prediction"]["label"] == "abnormality":
-                    # Converts the predicted image data to a NumPy array.
-                    predicted_image = np.array(result_response["prediction"]["image"])
+                # Ensures the predicted image is in the correct format for saving.
+                if predicted_image.max() <= 1:
+                    predicted_image = (predicted_image * 255).astype("uint8")
+                predicted_image = predicted_image.astype("uint8")
 
-                    # Ensures the predicted image is in the correct format for saving.
-                    if predicted_image.max() <= 1:
-                        predicted_image = (predicted_image * 255).astype("uint8")
-                    predicted_image = predicted_image.astype("uint8")
-
-                    # Converts NumPy array to a PIL image, saves it to a file.
-                    predicted_image = Image.fromarray(predicted_image)
-                    predicted_image.save(
-                        os.path.join("data", "out", f"{submission_id}.png")
-                    )
-                    return redirect(
-                        url_for(
-                            "positive",
-                            input_file_path=image_file_path,
-                            output_file_path=os.path.join(
-                                "data", "out", f"{submission_id}.png"
-                            ),
-                            score=result["prediction"]["score"],
-                        )
-                    )
-
-                # If the prediction is not an abnormality, redirects to negative result page.
-                else:
-                    return redirect(
-                        url_for(
-                            "negative",
-                            input_file_path=image_file_path,
-                            score=result["prediction"]["score"],
-                        )
-                    )
-
-            # If the result is a failure, redirects to error page.
-            elif result["status"] == "Failure":
+                # Converts NumPy array to a PIL image, saves it to a file.
+                predicted_image = Image.fromarray(predicted_image)
+                predicted_image.save(
+                    os.path.join("data", "out", f"{submission_id}.png")
+                )
                 return redirect(
                     url_for(
-                        "error",
-                        message=result["message"],
-                        image_file_path=image_file_path,
+                        "positive",
+                        input_file_path=image_file_path,
+                        output_file_path=os.path.join(
+                            "data", "out", f"{submission_id}.png"
+                        ),
+                        score=result["prediction"]["score"],
+                    )
+                )
+
+            # If the prediction is not an abnormality, redirects to negative result page.
+            else:
+                return redirect(
+                    url_for(
+                        "negative",
+                        input_file_path=image_file_path,
+                        score=result["prediction"]["score"],
                     )
                 )
 
@@ -235,7 +223,7 @@ def upload() -> str:
                 submission_response = requests.post(
                     submit_image_api_url,
                     files={"image": image_file},
-                    data={"workflow_name": "workflow_000"},
+                    data={"workflow_name": "workflow_001"},
                 )
 
             # Based on the status code of response, redirects to appropriate page.
@@ -295,4 +283,4 @@ if __name__ == "__main__":
         host_url = "http://host.docker.internal:8100"
 
     # Runs app on specified host & port (For local deployment)
-    app.run(host="0.0.0.0", port=3000, debug=True)
+    app.run(host="0.0.0.0", port=3001, debug=True)
