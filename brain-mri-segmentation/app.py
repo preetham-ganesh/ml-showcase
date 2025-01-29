@@ -2,9 +2,16 @@ import uuid
 import os
 import time
 
-from flask import Flask, send_from_directory, request, render_template, redirect
+from flask import (
+    Flask,
+    send_from_directory,
+    request,
+    render_template,
+    redirect,
+    url_for,
+)
 import requests
-from dotenv import load_dotenv
+from PIL import Image
 import numpy as np
 import skimage
 
@@ -101,4 +108,102 @@ def negative() -> str:
         "negative.html",
         input_file_path=input_file_path,
         score=round(float(score) * 100, 3),
+    )
+
+
+def process_result(image_file_path: str, submission_id: str) -> str:
+    """Processes the result of the prediction.
+
+    Processes the result of the prediction.
+
+    Args:
+        image_file_path: A string for the file path to the image.
+        submission_id: A string for the submission ID of the image.
+
+    Returns:
+        A string for the rendered template for the result or error.
+    """
+    fetch_result_api_url = f"{host_url}/api/v1/fetch_result/{submission_id}"
+
+    # Sets polling interval (in seconds) and maximum iterations for polling.
+    polling_interval = 2
+    max_iterations = 30
+
+    # Iterates over the maximum iterations to fetch the result.
+    for _ in range(max_iterations):
+        result_response = requests.get(fetch_result_api_url)
+
+        # Based on the status code of response, redirects to appropriate page.
+        if result_response.status_code == 200:
+            result = result_response.json()
+
+            # Based on the status of the result, redirects to appropriate page.
+            if result["status"] == "Success":
+
+                # If the prediction is an abnormality, saves the predicted image.
+                if result["prediction"]["label"] == "abnormality":
+                    # Converts the predicted image data to a NumPy array.
+                    predicted_image = np.array(result_response["prediction"]["image"])
+
+                    # Ensures the predicted image is in the correct format for saving.
+                    if predicted_image.max() <= 1:
+                        predicted_image = (predicted_image * 255).astype("uint8")
+                    predicted_image = predicted_image.astype("uint8")
+
+                    # Converts NumPy array to a PIL image, saves it to a file.
+                    predicted_image = Image.fromarray(predicted_image)
+                    predicted_image.save(
+                        os.path.join("data", "out", f"{submission_id}.png")
+                    )
+                    return redirect(
+                        url_for(
+                            "positive",
+                            input_file_path=image_file_path,
+                            output_file_path=os.path.join(
+                                "data", "out", f"{submission_id}.png"
+                            ),
+                            score=result["prediction"]["score"],
+                        )
+                    )
+
+                # If the prediction is not an abnormality, redirects to negative result page.
+                else:
+                    return redirect(
+                        url_for(
+                            "negative",
+                            input_file_path=image_file_path,
+                            score=result["prediction"]["score"],
+                        )
+                    )
+
+            # If the result is a failure, redirects to error page.
+            elif result["status"] == "Failure":
+                return redirect(
+                    url_for(
+                        "error",
+                        message=result["message"],
+                        image_file_path=image_file_path,
+                    )
+                )
+
+        # If the result is not found, redirects to error page.
+        elif result_response.status_code == 404:
+            return redirect(
+                url_for(
+                    "error",
+                    message=result_response.text,
+                    image_file_path=image_file_path,
+                )
+            )
+
+        # Wait before the next polling attempt
+        time.sleep(polling_interval)
+
+    # If processing is still not completed after timeout, returns timeout as error message.
+    return redirect(
+        url_for(
+            "error",
+            message="Timeout. Server is busy. Please try again after some time.",
+            image_file_path=image_file_path,
+        )
     )
