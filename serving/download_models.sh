@@ -19,9 +19,9 @@ prepare_model "https://www.dropbox.com/scl/fo/2f8f8bjdzvcq2h317i4fk/ACuxhLpOAaN2
               "digit_recognizer_v1.0.0" 
 
 # Prepares the Brain MRI Segmentation - FLAIR Abnormality Classification model v1.2.0 for serving.
-prepare_model "https://www.dropbox.com/scl/fo/3nuexl16h3muaexzdcspd/AGDcODtLO2v43iWU2Y27wEE?rlkey=ad1kbd6ybpcbpfxvocuiwac3n&st=c1fjjb8g&dl=0" \
+prepare_model "https://www.dropbox.com/scl/fo/12be5xjoxt6e4ayd4b5ua/AGEwC65MMfuXnIZHoCNfQHQ?rlkey=4ekks2zxk0jeurn70wezju3f1&st=rb0a9o4g&dl=0" \
               "bms_flair_abnormality_classification_v1.2.0" 
 
 # Prepares the Brain MRI Segmentation - FLAIR Abnormality Segmentation model v1.0.0 for serving.
-prepare_model "https://www.dropbox.com/scl/fo/k7kxvtt0soohbt4p8h9xi/AI4ZSPiKG-mwtesBuAHVyhM?rlkey=byfx2wawopv4ck7itwr3y521l&st=nlueuec5&dl=0" \
+prepare_model "https://www.dropbox.com/scl/fo/552ixfjpqpxhd02bx0w4i/AH5_W7nEFI05UCTmKd54P4o?rlkey=33f07jcanujedyiz7u3ggl39q&st=zuzbplrj&dl=0" \
               "bms_flair_abnormality_segmentation_v1.0.0" 
