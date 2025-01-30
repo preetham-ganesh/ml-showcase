@@ -7,3 +7,14 @@ This directory houses trained and serialized machine learning models for various
 - [Usage](https://github.com/preetham-ganesh/ml-showcase/serving#usage)
 - [Models Information](https://github.com/preetham-ganesh/ml-showcase/serving#models-information)
 - [Support](https://github.com/preetham-ganesh/ml-showcase/serving#support)
+
+## Usage
+
+Requires: [Docker](https://www.docker.com)
+
+Use the following code snippet to deploy the docker container locally:
+
+```bash
+docker build --no-cache -t ml-showcase-models .
+docker run -d -p 8500:8500 -p 8501:8501 --name ml-showcase-models ml-showcase-models
+```
