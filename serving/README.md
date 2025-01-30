@@ -18,3 +18,11 @@ Use the following code snippet to deploy the docker container locally:
 docker build --no-cache -t ml-showcase-models .
 docker run -d -p 8500:8500 -p 8501:8501 --name ml-showcase-models ml-showcase-models
 ```
+
+## Models Information
+
+| Project                | Model Name                       | Model Version | Description                                                                                     | API Endpoint                                                                         |
+| ---------------------- | -------------------------------- | ------------- | ----------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------ |
+| Digit Recognizer       | Digit Recognizer                 | v1.0.0        | A CNN model that recognizes digit in an image.                                                  | http://172.17.0.1:8501/v1/models/digit_recognizer_v1.0.0:predict                     |
+| Brain MRI Segmentation | FLAIR Abnormality Classification | v1.2.0        | A CNN model that classifies whether a given Brain MRI image has abnormality.                    | http://172.17.0.1:8501/v1/models/bms_flair_abnormality_classification_v1.2.0:predict |
+| Brain MRI Segmentation | FLAIR Abnormality Segmentation   | v1.0.0        | A U-Net model with MobileNetV2 pretrained on ImageNet as Encoder, and custom layers as decoder. | http://172.17.0.1:8501/v1/models/bms_flair_abnormality_segmentation_v1.0.0:predict   |
