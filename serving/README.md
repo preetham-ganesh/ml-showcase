@@ -67,3 +67,26 @@ response = requests.post(
 
 prediction = np.array(json.loads(response.text)["outputs"], dtype=np.float32)
 ```
+
+### FLAIR Abnormality Segmentation v1.0.0
+
+| Attribute Name        | Details                                                                                         |
+| --------------------- | ----------------------------------------------------------------------------------------------- |
+| **Project Name**      | Brain MRI Segmentation                                                                          |
+| **Model Description** | A U-Net model with MobileNetV2 pretrained on ImageNet as Encoder, and custom layers as decoder. |
+| **Hugging Face URL**  | https://huggingface.co/preethamganesh/bms-flair-abnormality-segmentation-v1.0.0                 |
+| **API Endpoint**      | http://172.17.0.1:8501/v1/models/bms_flair_abnormality_segmentation_v1.0.0:predict              |
+
+```python
+import requests
+import json
+import numpy as np
+
+response = requests.post(
+    "http://172.17.0.1:8501/v1/models/bms_flair_abnormality_segmentation_v1.0.0:predict",
+    data=json.dumps({"inputs": np.zeros((1, 256, 256, 3)).tolist()}),
+    headers={"content-type": "application/json"},
+)
+
+prediction = np.array(json.loads(response.text)["outputs"], dtype=np.float32)
+```
