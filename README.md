@@ -11,6 +11,10 @@ git clone https://github.com/preetham-ganesh/ml-showcase.git
 cd ml-showcase
 ```
 
+## Running with Docker
+
+Each project component is designed to run as an independent Docker container. Refer to the README in each directory for instructions on deploying the respective component.
+
 ## Project Components
 
 ### API Service (api/)
@@ -36,3 +40,7 @@ cd ml-showcase
 - Contains trained and serialized machine learning models for various projects.
 - Models are optimized for serving and deployment using TensorFlow Serving, Docker, and other tools.
 - It manages the lifecycle of ML models, including downloading pre-trained models and serving predictions.
+
+## Support
+
+For any queries regarding the repository please contact 'preetham.ganesh2021@gmail.com'.
