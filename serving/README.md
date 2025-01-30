@@ -44,3 +44,26 @@ response = requests.post(
 
 prediction = np.array(json.loads(response.text)["outputs"], dtype=np.float32)
 ```
+
+### FLAIR Abnormality Classification v1.2.0
+
+| Attribute Name        | Details                                                                              |
+| --------------------- | ------------------------------------------------------------------------------------ |
+| **Project Name**      | Brain MRI Segmentation                                                               |
+| **Model Description** | A CNN model that classifies whether a given Brain MRI image has abnormality.         |
+| **Hugging Face URL**  | https://huggingface.co/preethamganesh/bms-flair-abnormality-classification-v1.2.0    |
+| **API Endpoint**      | http://172.17.0.1:8501/v1/models/bms_flair_abnormality_classification_v1.2.0:predict |
+
+```python
+import requests
+import json
+import numpy as np
+
+response = requests.post(
+    "http://172.17.0.1:8501/v1/models/bms_flair_abnormality_classification_v1.2.0:predict",
+    data=json.dumps({"inputs": np.zeros((1, 256, 256, 3)).tolist()}),
+    headers={"content-type": "application/json"},
+)
+
+prediction = np.array(json.loads(response.text)["outputs"], dtype=np.float32)
+```
