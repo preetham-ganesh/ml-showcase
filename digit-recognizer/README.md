@@ -12,3 +12,12 @@ Use the following code snippet to deploy the docker container locally:
 docker build --no-cache -t digit-recognizer .
 docker run -d -p 3001:3001 --name digit-recognizer digit-recognizer
 ```
+
+## UI Routes
+
+| Route     | Method | Description                                                                              |
+| --------- | ------ | ---------------------------------------------------------------------------------------- |
+| `/`       | `GET`  | Redirects to Upload page.                                                                |
+| `/upload` | `POST` | Handles user selection of an image from a randomized list and submits it for prediction. |
+| `/error`  | `GET`  | Displays error messages if an issue occurs during prediction.                            |
+| `/result` | `GET`  | Shows the predicted result after processing the uploaded image.                          |
