@@ -50,3 +50,24 @@ with open("sample.png", "rb") as image_file:
   "submission_id": "4d4c9023-b5a1-49c5-92a8-aab98489a8de"
 }
 ```
+
+### Fetch Result
+
+- **Endpoint**: `/api/v1/fetch_result/<submission_id>`
+- **Method**: `GET`
+
+| Endpoint                             | Method | Description                                                                                               |
+| ------------------------------------ | ------ | --------------------------------------------------------------------------------------------------------- |
+| /api/v1/submit_image                 | POST   | Submits image to the API. Accepts file and workflow_name as inputs. Validates the inputs & workflow_name. |
+| /api/v1/fetch_result/<submission_id> | GET    | Checks if prediction output is ready. If yes, then returns the output, else returns current status.       |
+
+#### Sample Request
+
+```python
+import requests
+
+
+response = requests.get(
+    "http://localhost:8100/api/v1/fetch_result/4d4c9023-b5a1-49c5-92a8-aab98489a8de"
+)
+```
