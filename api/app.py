@@ -418,11 +418,12 @@ if __name__ == "__main__":
     # Initializes SQLite3 databases used to track the progress of submissions to the ML showcase API.
     initialize_databases()
 
+    # Sets API host.
+    host_name = "localhost" if args.deployment_type == "dev" else "serving"
+    API_HOST = f"http://{host_name}:8501"
+
     # Loads all the models & utility files for all workflows.
-    if args.deployment_type == "local":
-        load_workflows("http://localhost:8501")
-    else:
-        load_workflows("http://172.17.0.1:8501")
+    load_workflows(API_HOST)
 
     # Implements multi-threading for extract information function.
     processing_thread = threading.Thread(target=prediction)
