@@ -98,7 +98,7 @@ def process_result(image_file_path: str, submission_id: str) -> str:
     Returns:
         A string for the rendered template for the result or error.
     """
-    fetch_result_api_url = f"{host_url}/api/v1/fetch_result/{submission_id}"
+    fetch_result_api_url = f"{API_HOST}/api/v1/fetch_result/{submission_id}"
 
     # Sets polling interval (in seconds) and maximum iterations for polling.
     polling_interval = 2
@@ -172,7 +172,7 @@ def upload() -> str:
         image_file_path = image_file_path.lstrip("../")
 
         # Defines the API URL for submitting the image to the ML model.
-        submit_image_api_url = f"{host_url}/api/v1/submit_image"
+        submit_image_api_url = f"{API_HOST}/api/v1/submit_image"
 
         # Opens the image file and submit it to the ML Showcase API for prediction.
         try:
@@ -233,11 +233,9 @@ if __name__ == "__main__":
     )
     args = parser.parse_args()
 
-    # Based on the type of deployment, the host URL is set.
-    if args.deployment_type == "local":
-        host_url = "http://localhost:8100"
-    else:
-        host_url = "http://172.17.0.1:8100"
+    # Sets API host.
+    host_name = "localhost" if args.deployment_type == "dev" else "api"
+    API_HOST = f"http://{host_name}:8100"
 
     # Runs app on specified host & port (For local deployment)
     app.run(host="0.0.0.0", port=3001)

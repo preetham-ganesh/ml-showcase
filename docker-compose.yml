@@ -1,0 +1,57 @@
+services:
+
+  serving:
+      build:
+        context: ./serving
+        dockerfile: Dockerfile
+      container_name: serving
+      ports:
+        - "8500:8500"
+        - "8501:8501"
+      networks:
+        - ml-showcase
+      restart: unless-stopped
+  
+  api:
+    build:
+        context: ./api
+        dockerfile: Dockerfile
+    container_name: api
+    ports:
+      - "8100:8100"
+    networks:
+      - ml-showcase
+    depends_on:
+      - serving
+    restart: unless-stopped
+
+  brain-mri-segmentation:
+    build:
+        context: ./brain-mri-segmentation
+        dockerfile: Dockerfile
+    container_name: brain-mri-segmentation
+    ports:
+      - "3002:3002"
+    networks:
+      - ml-showcase
+    depends_on:
+      - serving
+      - api
+    restart: unless-stopped
+  
+  digit-recognizer:
+    build:
+        context: ./digit-recognizer
+        dockerfile: Dockerfile
+    container_name: digit-recognizer
+    ports:
+      - "3001:3001"
+    networks:
+      - ml-showcase
+    depends_on:
+      - serving
+      - api
+    restart: unless-stopped
+
+networks:
+  ml-showcase:
